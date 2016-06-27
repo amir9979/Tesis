@@ -1,3 +1,4 @@
+package lists_tests;
 import static org.junit.Assert.*;
 import lists.dictionary_example.Dictionary;
 
