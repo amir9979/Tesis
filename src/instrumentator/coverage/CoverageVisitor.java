@@ -16,23 +16,18 @@ public class CoverageVisitor extends ModifierVisitorAdapter<Object>{
 	private String file;
 	
 	public CoverageVisitor(String file) {
-		this.file = file;
+		this.setFile(file);
 	}
 	
-
-	
-	
-	@Override 
-	public Node visit(BlockStmt node, Object arg){
-		BlockStmt n = new BlockStmt();
-		n.addStatement(makeCoverageTrackingCall(file, node.getBegin().line));
-		for (Statement st : node.getStmts()){
-			n.addStatement(st);
-		}
-		super.visit(node, arg);
-		return n;
+	private String getFile() {
+		return file;
 	}
-
+	
+	/*
+	 * This method creates and returns the Statement object to be added to the Block list of Statements,
+	 * first, it marks the actual line as executable in the hash map containing that information, then, it adds
+	 * a new method call to markExecuted with the file path and the line as arguments, then it returns that Statement.
+	 */
 	private Statement makeCoverageTrackingCall(String file, int line) {
 		CoverageTracker.markExecutable(file, line);
 		NameExpr coverageTracker = ASTHelper.createNameExpr("instrumentator.coverage.CoverageTracker");
@@ -41,32 +36,31 @@ public class CoverageVisitor extends ModifierVisitorAdapter<Object>{
 	    ASTHelper.addArgument(call, new IntegerLiteralExpr(String.valueOf(line)));
 	    return new ExpressionStmt(call);
 	}
-	
-//	public void ParseAndSave(){ 
-//		try {
-//			CompilationUnit cu = JavaParser.parse(new StringReader(this.file));
-//
-//		    //System.out.println(helloClass.getMembers())
-//		    
-//		    for (TypeDeclaration t : cu.getTypes()){
-//		    	for (BodyDeclaration bd : t.getMembers()){
-//				    for (BlockStmt b : ASTHelper.getNodesByType(bd, BlockStmt.class)) {
-//				    	
-//				    	//Package of method (Scope)
-//				    	NameExpr pack = ASTHelper.createNameExpr("instrumentator.coverage.CoverageTracker");
-//				    	//Method to be called
-//				    	MethodCallExpr meth = new MethodCallExpr(pack,"markExecuted");
-//				    	//Add as arguments the class that executes the block and the initial position of the block
-//				    	ASTHelper.addArgument(meth, new StringLiteralExpr(t.getName()+".class"));
-//				    	ASTHelper.addArgument(meth, new IntegerLiteralExpr(String.valueOf((b.getBegin().line))));
-//				    	//Add the statement to mark the executed line (See how to add it on the beggining of the block
-//				    	ASTHelper.addStmt(b, meth);
-//				    }
-//		    	}
-//		    }
-//		} catch (ParseException e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//		}
-//	}
+
+	private void setFile(String file) {
+		this.file = file;
+	}
+
+	@Override 
+	public Node visit(BlockStmt node, Object arg){
+		/*
+		 * Create a new Block Statement to replace the visited one, this modified block
+		 * contains a call to the coverage tracker.
+		 */
+		BlockStmt n = new BlockStmt();
+		/*
+		 * Add the new statement to the created Block in the first line of the visited block.
+		 * Then, add all the statements that belong to the actual node to the block statement
+		 * that will replace it.
+		 */
+		n.addStatement(makeCoverageTrackingCall(getFile(), node.getBegin().line));
+		for (Statement st : node.getStmts()){
+			n.addStatement(st);
+		}
+		/*
+		 * Continue visiting the rest of the AST.
+		 */
+		super.visit(node, arg);
+		return n;
+	}
 }
