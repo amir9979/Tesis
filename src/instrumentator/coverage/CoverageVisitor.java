@@ -28,11 +28,10 @@ public class CoverageVisitor extends ModifierVisitorAdapter<Object>{
 	 * first, it marks the actual line as executable in the hash map containing that information, then, it adds
 	 * a new method call to markExecuted with the file path and the line as arguments, then it returns that Statement.
 	 */
-	private Statement makeCoverageTrackingCall(String file, int line) {
-		CoverageTracker.markExecutable(file, line);
+	private Statement makeCoverageTrackingCall(int line) {
+		//CoverageTracker.markExecutable(file, line); No need for this, I don't want to know if a line could be executed.
 		NameExpr coverageTracker = ASTHelper.createNameExpr("instrumentator.coverage.CoverageTracker");
 		MethodCallExpr call = new MethodCallExpr(coverageTracker, "markExecuted");
-	    ASTHelper.addArgument(call, new StringLiteralExpr(file));
 	    ASTHelper.addArgument(call, new IntegerLiteralExpr(String.valueOf(line)));
 	    return new ExpressionStmt(call);
 	}
@@ -53,7 +52,7 @@ public class CoverageVisitor extends ModifierVisitorAdapter<Object>{
 		 * Then, add all the statements that belong to the actual node to the block statement
 		 * that will replace it.
 		 */
-		n.addStatement(makeCoverageTrackingCall(getFile(), node.getBegin().line));
+		n.addStatement(makeCoverageTrackingCall(node.getBegin().line));
 		for (Statement st : node.getStmts()){
 			n.addStatement(st);
 		}
