@@ -13,6 +13,7 @@ import java.util.Map;
 
 import javax.management.RuntimeErrorException;
 
+import instrumentator.utils.MapUtils;
 import instrumentator.utils.Pair;
 /*
  * 
@@ -27,8 +28,19 @@ public class CoverageTracker {
 	//Maps lines numbers to amount of executions on passing and failing tests
 	private static Map<Integer, Pair<Integer, Integer>> stats = new HashMap<Integer, Pair<Integer, Integer>>();
 	
+	//Total amount of failed tests
+	private static int failed = 0;
+	
+	//Total amount of passed tests
+	private static int passed = 0;
+	
 	/**
+	 * Deprecated:
 	 * Attempt to use Lcov records as used in: http://ismail.badawi.io/blog/2013/05/03/writing-a-code-coverage-tool/
+	 */
+	
+	/**
+	 * Reads the Path where the report should be written, generates the report and saves it.
 	 */
 	private static void writeCoverageToFile(){
 		String report = generateReport();
@@ -49,18 +61,27 @@ public class CoverageTracker {
 		System.out.println(reportPath);
 	}
 	
+	/*
+	 * Generates a simple report containing the stats of the lines, the total amount of failed tests
+	 * and the total amount of passed tests
+	 */
 	private static String generateReport(){
 		StringBuilder sb = new StringBuilder();
-		sb.append(generateLcov());
+		sb.append(generateTestAmount());
+		sb.append(generateStats());
 		return sb.toString();
 	}
 	
-	private static String generateLcov(){
+	private static String generateStats(){
 		StringBuilder sb = new StringBuilder();
 		for (Integer line : stats.keySet()){
 			sb.append("LINE: "+line.toString()+" - "+stats.get(line).toString()+"\n");
 		}
 		return sb.toString();
+	}
+	
+	private static String generateTestAmount(){
+		return "PASSED TESTS: "+passed+"\n"+"FAILED TESTS: "+failed+"\n";
 	}
 
 	/**
@@ -85,10 +106,6 @@ public class CoverageTracker {
 ////		}
 ////	}
 
-	/**
-	 * Mark a block as executed on a passing test o failing one
-	 */
-	
 	
 	/**
 	 * Mark a block as executed.
@@ -119,6 +136,9 @@ public class CoverageTracker {
 			}
 			stats.put(line, lineCount);
 		}
+		//Increase the failed and passed counters
+		if (result) passed++;
+		else failed++;
 	}
 	
 	/**
@@ -146,7 +166,8 @@ public class CoverageTracker {
 		Runtime.getRuntime().addShutdownHook(new Thread(){
 			@Override
 			public void run() {
-				System.out.println("Coverage to be written: "+coverage.toString());
+				System.out.println("Coverage: "+coverage.toString());
+				System.out.println("Stats: "+stats.toString());
 				writeCoverageToFile();
 			}
 		});
