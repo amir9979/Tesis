@@ -48,12 +48,9 @@ public class TestVisitor extends ModifierVisitorAdapter<Object>{
 	
 	@Override
 	public Node visit(ClassOrInterfaceDeclaration cd, Object arg){
-		System.out.println("Entre a la clase de nombre "+cd.getName() );
-		String init = "new instrumentator.coverage.Watchman()";
-		VariableDeclarator variables = new VariableDeclarator(new VariableDeclaratorId("watcher"),new NameExpr(init));
-		FieldDeclaration field = new FieldDeclaration(Modifier.PUBLIC.toEnumSet(), new ClassOrInterfaceType("instrumentator.coverage.Watchman"), variables);
-		ASTHelper.addMember(cd, field);
-		cd.getFieldByName("watcher").addAnnotation("Rule");
+		//System.out.println("Entre a la clase de nombre "+cd.getName() );
+		addRuleDeclaration(cd);
+		cd.tryAddImportToParentCompilationUnit(org.junit.Rule.class);
 		super.visit(cd, arg);
 		System.out.println(cd);
 		return cd;
@@ -70,10 +67,12 @@ public class TestVisitor extends ModifierVisitorAdapter<Object>{
 //		return md;		
 //	}
 	
-	private FieldDeclaration ruleDeclaration(ClassOrInterfaceDeclaration cd){
-		String initString = "Watchman";
-		//FieldDeclaration fd = new FieldDeclaration(Modifier.PRIVATE, new ClassOrInterfaceDeclaration("instrumentator.coverage.Watchman"), variable)
-return null;
+	private void addRuleDeclaration(ClassOrInterfaceDeclaration cd){
+		String init = "new instrumentator.coverage.Watchman()";
+		VariableDeclarator variables = new VariableDeclarator(new VariableDeclaratorId("watcher"),new NameExpr(init));
+		FieldDeclaration fd = new FieldDeclaration(Modifier.PUBLIC.toEnumSet(), new ClassOrInterfaceType("instrumentator.coverage.Watchman"), variables);
+		ASTHelper.addMember(cd, fd);
+		cd.getFieldByName("watcher").addAnnotation("Rule");
 	}
 	
 	private BodyDeclaration<MethodDeclaration> afterMethod(ClassOrInterfaceDeclaration cd){
