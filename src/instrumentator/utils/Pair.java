@@ -27,6 +27,11 @@ public class Pair<L,R> {
 		return getLeft().hashCode() ^ getRight().hashCode();
 	}
 	
+	@Override 
+	public String toString(){
+		return "[left: "+getLeft()+", right: "+getRight()+"]";
+	}
+	
 	@Override
 	public boolean equals(Object o){
 		if (!(o instanceof Pair)) return false;
