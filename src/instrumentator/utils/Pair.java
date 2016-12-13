@@ -29,7 +29,7 @@ public class Pair<L,R> {
 	
 	@Override 
 	public String toString(){
-		return "[left: "+getLeft()+", right: "+getRight()+"]";
+		return "[Passed: "+getLeft()+", Failed: "+getRight()+"]";
 	}
 	
 	@Override

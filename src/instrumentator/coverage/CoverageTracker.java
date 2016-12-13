@@ -2,18 +2,9 @@ package instrumentator.coverage;
 
 import java.io.FileWriter;
 import java.io.IOException;
-import java.nio.charset.Charset;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
 
-import javax.management.RuntimeErrorException;
-
-import instrumentator.utils.MapUtils;
 import instrumentator.utils.Pair;
 /*
  * 
@@ -24,6 +15,17 @@ public class CoverageTracker {
 	//Maps line numbers to true (Executed) or false (Not executed)
 	private static Map<Integer, Boolean> coverage = new HashMap<Integer,Boolean>();
 
+	private enum Formulas {
+		TARANTULA,
+		OCHIAI,
+		OP2,
+		BARINEL,
+		DSTAR,
+		ALL
+	}
+	
+	private static int formula;
+	private static int exp = 2;
 	
 	//Maps lines numbers to amount of executions on passing and failing tests
 	private static Map<Integer, Pair<Integer, Integer>> stats = new HashMap<Integer, Pair<Integer, Integer>>();
@@ -58,9 +60,156 @@ public class CoverageTracker {
 				throw new RuntimeException(e);
 			}
 		}
-		System.out.println(reportPath);
 	}
 	
+	private static void writeRankingToFile(){
+		String report = generateRankingReport(formula);
+		String reportPath = System.getProperty("report.path", "instrumented/ranking.txt");
+		FileWriter writer = null;
+		try {
+			writer = new FileWriter(reportPath);
+			writer.write(report);
+		} catch (IOException io){
+			throw new RuntimeException(io);
+		} finally {
+			try{
+				writer.close();
+			} catch (IOException e){
+				throw new RuntimeException(e);
+			}
+		}
+	}
+	
+	private static String generateRankingReport(int formula){
+		StringBuilder sb = new StringBuilder();
+		sb.append("RANKING START\n");
+		switch (formula){
+			case 1:
+				sb.append("USING FORMULA: "+Formulas.TARANTULA+"\n");
+				break;
+			case 2:
+				sb.append("USING FORMULA: "+Formulas.OCHIAI+"\n");
+				break;
+			case 3:
+				sb.append("USING FORMULA: "+Formulas.OP2+"\n");
+				break;
+			case 4:
+				sb.append("USING FORMULA: "+Formulas.BARINEL+"\n");
+				break;
+			case 5:
+				sb.append("USING FORMULA: "+Formulas.DSTAR+"\n");
+				break;
+			default: 
+				sb.append("USING "+Formulas.ALL+" FORMULAS \n");
+				break;
+		}
+		sb.append("|====================================| \n");
+		sb.append(generateRanking(formula));
+		sb.append("RANKING END; \n");
+		return sb.toString();
+	}
+	
+	private static String generateRanking(int formula){
+		StringBuilder sb = new StringBuilder();
+		for (Integer line : stats.keySet()){
+			int lineFails = stats.get(line).getRight();
+			int lineSuccess = stats.get(line).getLeft();
+			sb.append("|-LINE: "+line.toString()+"\n|---RANK:");
+			switch(formula){
+				case 1:
+					sb.append("\t"+tarantulaRank(lineFails, lineSuccess, failed, passed)+"\n");
+					break;
+				case 2:
+					sb.append("\t"+ochiaiRank(lineFails, lineSuccess, failed)+"\n");
+					break;
+				case 3:
+					sb.append("\t"+op2Rank(lineFails, lineSuccess, passed)+"\n");
+					break;
+				case 4:
+					sb.append("\t"+barinelRank(lineFails, lineSuccess)+"\n");
+					break;
+				case 5:
+					sb.append("\t"+dStarRank(lineFails, lineSuccess, failed, exp)+"\n");
+					break;
+				default:
+					sb.append("\n"+combinedRanks(lineFails, lineSuccess, failed, passed, exp));
+					break;
+			}
+			sb.append("|====================================| \n");
+		}
+		return sb.toString();
+	}
+	/**
+	 * Functions that creates a string with the result of each formula.
+	 */
+	
+	/**
+	 * Method that generates a String with the value of Tarantula ranking
+	 * @param lineFails participation of a line in failing tests
+	 * @param lineSuccess participation of a line in successful tests
+	 * @param totalFailed amount of failing tests
+	 * @param totalPassed amount of successful tests
+	 * @return String with the value of Tarantula ranking
+	 */
+	private static String tarantulaRank(int lineFails, int lineSuccess, int totalFailed, int totalPassed){
+		StringBuilder sb = new StringBuilder();
+		float result = (lineFails/(float)totalFailed)/((lineFails/(float)totalFailed)+(lineSuccess/(float)totalPassed));
+		return sb.append(result).toString();
+	}
+	
+	/**
+	 * Method that generates a String with the value of Ochiai ranking
+	 * @param lineFails participation of a line in failing tests
+	 * @param lineSuccess participation of a line in successful tests	
+	 * @param totalFailed amount of failing tests
+	 * @return String with the value of Ochiai ranking
+	 */
+	private static String ochiaiRank(int lineFails, int lineSuccess, int totalFailed){
+		StringBuilder sb = new StringBuilder();
+		float result = lineFails / (float) Math.sqrt(totalFailed * (lineFails + lineSuccess));
+		return sb.append(result).toString();
+	}
+	
+	/**
+	 * Method that generates a String with the value of OP2 ranking
+	 * @param lineFails participation of a line in failing tests
+	 * @param lineSuccess participation of a line in successful tests
+	 * @param totalPassed amount of successful tests
+	 * @return String with the value of Op2 ranking
+	 */
+	private static String op2Rank(int lineFails, int lineSuccess, int totalPassed){
+		StringBuilder sb = new StringBuilder();
+		float result = lineFails - (lineSuccess / (float)(totalPassed+1));
+		return sb.append(result).toString();
+	}
+	
+	/**
+	 * Method that generates a String with the value of Barinel ranking
+	 * @param lineFails participation of a line in failing tests
+	 * @param lineSuccess participation of a line in successful tests
+	 * @return String with the value of Barinel ranking
+	 */
+	private static String barinelRank(int lineFails, int lineSuccess){
+		StringBuilder sb = new StringBuilder();
+		float result = 1 - (lineSuccess/(float)(lineSuccess+lineFails));
+		return sb.append(result).toString();
+	}
+	
+	private static String dStarRank(int lineFails, int lineSuccess, int totalFailed, int exp){
+		StringBuilder sb = new StringBuilder();
+		float result = (float) (Math.pow(lineFails, exp) / (float)(lineSuccess+(totalFailed - lineFails))); 
+		return sb.append(result).toString();
+	}
+	
+	private static String combinedRanks(int lineFails, int lineSuccess, int totalFailed, int totalPassed, int exp){
+		StringBuilder sb = new StringBuilder();
+		sb.append("|-----TARANTULA: "+tarantulaRank(lineFails, lineSuccess, totalFailed, totalPassed)+"\n");
+		sb.append("|-----OCHIAI: "+ochiaiRank(lineFails, lineSuccess, totalFailed)+"\n");
+		sb.append("|-----OP2: "+op2Rank(lineFails, lineSuccess, totalPassed)+"\n");
+		sb.append("|-----BARINEL: "+barinelRank(lineFails, lineSuccess)+"\n");
+		sb.append("|-----DSTAR: "+dStarRank(lineFails, lineSuccess, totalFailed, exp)+"\n");
+		return sb.toString();
+	}
 	/*
 	 * Generates a simple report containing the stats of the lines, the total amount of failed tests
 	 * and the total amount of passed tests
@@ -166,10 +315,18 @@ public class CoverageTracker {
 		Runtime.getRuntime().addShutdownHook(new Thread(){
 			@Override
 			public void run() {
-				System.out.println("Coverage: "+coverage.toString());
-				System.out.println("Stats: "+stats.toString());
+//				System.out.println("Coverage: "+coverage.toString());
+//				System.out.println("Stats: "+stats.toString());
 				writeCoverageToFile();
+				writeRankingToFile();
 			}
 		});
+	}
+	public static int getFormula() {
+		return formula;
+	}
+
+	public static void setFormula(int formula) {
+		CoverageTracker.formula = formula;
 	}
 }

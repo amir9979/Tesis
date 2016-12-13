@@ -2,10 +2,10 @@ package instrumentator.coverage;
 
 import com.github.javaparser.ASTHelper;
 import com.github.javaparser.ast.Node;
+import com.github.javaparser.ast.PackageDeclaration;
 import com.github.javaparser.ast.expr.IntegerLiteralExpr;
 import com.github.javaparser.ast.expr.MethodCallExpr;
 import com.github.javaparser.ast.expr.NameExpr;
-import com.github.javaparser.ast.expr.StringLiteralExpr;
 import com.github.javaparser.ast.stmt.BlockStmt;
 import com.github.javaparser.ast.stmt.ExpressionStmt;
 import com.github.javaparser.ast.stmt.Statement;
@@ -21,6 +21,20 @@ public class CoverageVisitor extends ModifierVisitorAdapter<Object>{
 	
 	private String getFile() {
 		return file;
+	}
+	
+//	@Override
+//	public Node visit(ClassOrInterfaceDeclaration cd, Object arg){
+//		cd.setName(cd.getName()+"_instrumented");
+//		super.visit(cd, arg);	
+//		return cd;
+//	}
+	
+	@Override 
+	public Node visit(PackageDeclaration pd, Object arg){
+		pd.setName(new NameExpr("instrumented."+pd.getPackageName()));
+		super.visit(pd, arg);
+		return pd;
 	}
 	
 	/*

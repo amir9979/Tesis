@@ -1,0 +1,1 @@
+valipar testcase --new -p 0 GcdMaster "8 12 7" -p 1 GcdSlave "1" -p 2 GcdSlave "2"

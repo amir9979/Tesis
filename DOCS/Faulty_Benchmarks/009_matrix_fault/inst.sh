@@ -1,0 +1,1 @@
+valipar inst -t -l -p Matrix -f *.class

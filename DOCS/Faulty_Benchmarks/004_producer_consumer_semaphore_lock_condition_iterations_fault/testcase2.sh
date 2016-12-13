@@ -1,0 +1,1 @@
+valipar testcase --new -p 0 Main "4 0 2 1"
