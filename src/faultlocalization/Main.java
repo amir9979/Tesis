@@ -3,18 +3,12 @@ package faultlocalization;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
-import java.util.Arrays;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeSet;
-
-import javax.tools.JavaCompiler;
-import javax.tools.JavaFileObject;
-import javax.tools.StandardJavaFileManager;
-import javax.tools.ToolProvider;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -22,18 +16,8 @@ import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.junit.runner.Result;
-import org.junit.runner.notification.Failure;
-import org.junit.runners.model.InitializationError;
-
-import faultlocalization.coverage.CoverageInformationHolder;
-import faultlocalization.coverage.Instrumentalizator;
 import faultlocalization.coverage.SpectrumBasedFormula;
 import faultlocalization.coverage.SpectrumBasedFormula.Formulas;
-import faultlocalization.junit.runner.FaultLocalizationTrigger;
-import faultlocalization.junit.runner.JunitTestRunner;
-import faultlocalization.junit.runner.TestRunnerException;
-import faultlocalization.loader.Reloader;
 
 /**
  * Fault localization application.
@@ -249,85 +233,36 @@ public class Main {
 			System.out.println("Classpath : ");
 			for (String c : classpath) System.out.println("        " + c);
 			
-			
-			//TODO: run fault localization here!
-			//Steps for fault localization
-			//-----------------------------------
-			//1 : Instrument faulty class file
-			//2 : Compile instrumented faulty class
-			//3 : Run tests
-			//4 : Calculate rankings
-			//5 : Output results
-			
-			Reloader reloader = new Reloader(classpath, Thread.currentThread().getContextClassLoader());
-			reloader.setSpecificClassPath(faultyClassName, outputFolder.getPath().toString() + File.separator);
-			reloader.markClassAsReloadable(faultyClassName);
-			reloader.markEveryClassInFolderAsReloadable(jtestsFolder.getPath().toString() + File.separator);
-			
-			//Instrument faulty class file
-			
-			File outputFile = outputFolder.toPath().resolve(fclassNameAsPath+".java").toFile();
-			if (outputFile.exists()) outputFile.delete();
-			outputFile.getParentFile().mkdirs();
-			outputFile.createNewFile();
-			
-			Instrumentalizator instrumentalizator = new Instrumentalizator(fclassFile);
-			instrumentalizator.instrument(outputFile);
-			
-			//Compile instrumented faulty class
-			
-			File fileToCompile = outputFile;
-			if (!fileToCompile.exists() || !fileToCompile.isFile() || !fileToCompile.getName().endsWith(".java")) {
-				System.err.println("Invalid file to compile : " + fileToCompile.getPath());
-				return;
-			}
-			File[] files = new File[]{fileToCompile};
-			JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
-			StandardJavaFileManager fileManager = compiler.getStandardFileManager(null, null, null);
-			Iterable<? extends JavaFileObject> compilationUnit = fileManager.getJavaFileObjectsFromFiles(Arrays.asList(files));
-			boolean compileResult = compiler.getTask(null, fileManager, null, Arrays.asList(new String[] {"-classpath", pathsAsString(classpath)}), null, compilationUnit).call();
-			
-			if (!compileResult) {
-				System.err.println("Failed to compile " + fileToCompile.getPath().toString());
-				return;
-			}
-			
-			//Run tests
-			
-			CoverageInformationHolder.getInstance().instantiateCoverageInformation(fclassFile.getPath().toString());
-			FaultLocalizationTrigger trigger = new FaultLocalizationTrigger(CoverageInformationHolder.getInstance().getCoverageInformation(fclassFile.getPath().toString()));
-			for (String test : jutests) {
-				Class<?> testToRun;
-				try {
-					reloader = reloader.getLastChild();
-					testToRun = reloader.rloadClass(test, true);
-					
-					JunitTestRunner testRunner = new JunitTestRunner(testToRun, trigger);
-					Result result = testRunner.run();
-					killStillRunningJUnitTestcaseThreads();
-					
-//					for (Failure f : result.getFailures()) {
-//						System.out.println(f.toString());
-//						Throwable t = f.getException();
-//						if (t != null) t.printStackTrace();
-//					}
-					
-					
-				} catch (TestRunnerException | InitializationError | ClassNotFoundException e) {
-					e.printStackTrace();
-				}
-			}
-			
 			//Calculate rankings and output results
 			
+			Map<String, Map<Integer, Float>> rankings = Api.rankStatements(faultyClassName, fcodeFolder, jtestsFolder, outputFolder, jutests, sbFormulas, librariesPaths);
+			
 			for (Formulas f : sbFormulas) {
-				SpectrumBasedFormula sbf = new SpectrumBasedFormula(f);
-				System.out.println(sbf.toString());
+				Map<Integer, Float> ranking = rankings.get(f.getName());
+				System.out.println("================================");
+				System.out.println(f.getName());
 				System.out.println("Statements ranking :");
-				for (Entry<Integer, Float> rank : sbf.rankStatements(CoverageInformationHolder.getInstance().getCoverageInformation(fclassFile.getPath().toString())).entrySet()) {
+				for (Entry<Integer, Float> rank : ranking.entrySet()) {
 					System.out.println("s : " + rank.getKey() + " r : " + rank.getValue());
 				}
 				System.out.println("================================");
+				System.out.println();
+			}
+			
+			//Generate mutGenLimit versions
+			
+			Set<Integer> linesToMark = new TreeSet<>();
+			for (Formulas f : sbFormulas) {
+				Map<Integer, Float> ranking = rankings.get(f.getName());
+				for (Entry<Integer, Float> r : ranking.entrySet()) {
+					if (r.getValue() > 0 && !linesToMark.contains(r.getKey())) {
+						linesToMark.add(r.getKey());
+					}
+				}
+			}
+			
+			for (Integer l : linesToMark) {
+				Api.generateMutGenLimitVersion(faultyClassName, fcodeFolder, outputFolder, l);
 			}
 			
 			
@@ -344,33 +279,5 @@ public class Main {
 		
 	}
 	
-	private static String pathsAsString(List<String> paths) {
-		String res = "";
-		Iterator<String> pit = paths.iterator();
-		while (pit.hasNext()) {
-			res += pit.next();
-			if (pit.hasNext()) {
-				res += File.pathSeparator;
-			}
-		}
-		return res;
-	}
-	
-	@SuppressWarnings("deprecation")
-	public static void killStillRunningJUnitTestcaseThreads() {
-	    Set<Thread> threadSet = Thread.getAllStackTraces().keySet();
-	    for (Thread thread : threadSet) {
-	        if (!(thread.isDaemon())) {
-	            final StackTraceElement[] threadStackTrace = thread.getStackTrace();
-	            if (threadStackTrace.length > 1) {
-	                StackTraceElement firstMethodInvocation = threadStackTrace[threadStackTrace.length - 1];
-	                if (firstMethodInvocation.getClassName().startsWith("org.junit")) {
-	                    // HACK: must use deprecated method
-	                    thread.stop();
-	                }
-	            }
-	        }
-	    }
-	}
 
 }
