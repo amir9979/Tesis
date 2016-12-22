@@ -118,7 +118,14 @@ public class Api {
 													File fcodeFolder,
 													File outputFolder,
 													int line) throws IOException, ParseException {
-		
+		generateMutGenLimitVersion(className, fcodeFolder, outputFolder, line, 5);
+	}
+	
+	public static void generateMutGenLimitVersion( String className,
+												   File fcodeFolder,
+												   File outputFolder,
+												   int line,
+												   int mgl) throws IOException, ParseException {
 		String classNameAsPath = className.replaceAll("\\.", File.separator);
 		File classFile = fcodeFolder.toPath().resolve(classNameAsPath + ".java").toFile();
 		File outputMGLFolder = outputFolder.toPath().resolve("MutGenLimitVersions").resolve(className+"-"+line).toFile();
@@ -127,9 +134,30 @@ public class Api {
 		outputFile.getParentFile().mkdirs();
 		outputFile.createNewFile();
 		
-		Instrumentalizator instrumentalizator = new Instrumentalizator(classFile, line);
+		Map<Integer, Integer> mglPerLine = new TreeMap<>();
+		mglPerLine.put(line, mgl);
+		Instrumentalizator instrumentalizator = new Instrumentalizator(classFile, mglPerLine);
 		instrumentalizator.instrument(outputFile);
+	}
+	
+	public static void generateMutGenLimitGradientVersion( String className,
+												   File fcodeFolder,
+												   File outputFolder,
+												   Map<Integer, Integer> mutGenLimitsPerLine) throws IOException, ParseException {
+		String classNameAsPath = className.replaceAll("\\.", File.separator);
+		String fileName = className + "-gradient";
+		for (Integer l : mutGenLimitsPerLine.keySet()) {
+			fileName += "_" + l;
+		}
+		File classFile = fcodeFolder.toPath().resolve(classNameAsPath + ".java").toFile();	
+		File outputMGLFolder = outputFolder.toPath().resolve("MutGenLimitVersions").resolve(fileName).toFile();
+		File outputFile = outputMGLFolder.toPath().resolve(classNameAsPath+".java").toFile();
+		if (outputFile.exists()) outputFile.delete();
+		outputFile.getParentFile().mkdirs();
+		outputFile.createNewFile();
 		
+		Instrumentalizator instrumentalizator = new Instrumentalizator(classFile, mutGenLimitsPerLine);
+		instrumentalizator.instrument(outputFile);
 	}
 	
 	private static String pathsAsString(List<String> paths) {
