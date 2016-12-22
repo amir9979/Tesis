@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.TreeSet;
 
 import org.apache.commons.cli.CommandLine;
@@ -32,20 +33,27 @@ import faultlocalization.coverage.SpectrumBasedFormula.Formulas;
  * <li>DSTAR</li>
  * <p>
  * @author stein
- * @version 0.1
+ * @version 0.5
  */
 public class Main {
 	
-	public static final String version = "0.1";
+	public static final String version = "0.5";
+	public static int rankedStatements = 3;
+	public static int mutGenLimitMax = 5;
+	public static boolean generateGradientVersion = false;
+	public static int gradientStep = 2;
 
 	public static void main(String[] args) {
 		
 		args = new String[]{"-p", "/home/stein/Projects/FaultLocalization/FaultLocalization/faulty_code/",
-							"-c", "introclass.median.introclass_3cf6d33a_007",
+							"-c", "introclass.median.introclass_3b2376ab_003",
 							"-t", "/home/stein/Projects/FaultLocalization/FaultLocalization/tests/",
 							"-j", "median_tests.Median_Tests",
 							"-o", "/home/stein/Desktop/FL/",
-							"-f", "tarantula", "OCHIAI", "OP2", "BARINEL", "DSTAR"};
+							"-f", "tarantula", "OCHIAI", "OP2", "BARINEL", "DSTAR",
+							"-n", "3",
+							"-m", "5",
+							"-g", "2"};
 		
 		Options options = new Options();
 		Option path = new Option("p", "path", true, "qualified path to faulty code e.g.: src/ or /Users/ppargento/Documents/workspace/pepe/src/");
@@ -83,6 +91,22 @@ public class Main {
 		output.setType(String.class);
 		output.setArgs(1);
 		
+		Option rankLimit = new Option("n", "rankLimit", true, "How many ranked statements will be taken into account when generating the mutGenLimit versions");
+		rankLimit.setRequired(false);
+		rankLimit.setType(Integer.class);
+		rankLimit.setArgs(1);
+		
+		Option mglLimit = new Option("m", "mglMax", true, "Max value for mutGenLimit comments");
+		mglLimit.setRequired(false);
+		mglLimit.setType(Integer.class);
+		mglLimit.setArgs(1);
+		
+		Option gradientVersion = new Option("g", "gradientVersion", true, "Generate gradient mutGenLimit version");
+		gradientVersion.setRequired(false);
+		gradientVersion.setType(Integer.class);
+		gradientVersion.setArgs(1);
+		
+		
 //		Option stopAtFirstProblem = new Option("p", "panic", true, "Defines if the application should stop at the first problem or it will try to continue as long as it can");
 //		stopAtFirstProblem.setRequired(false);
 //		stopAtFirstProblem.setArgs(1);
@@ -101,6 +125,9 @@ public class Main {
 		options.addOption(tests);
 		options.addOption(techniques);
 		options.addOption(output);
+		options.addOption(rankLimit);
+		options.addOption(mglLimit);
+		options.addOption(gradientVersion);
 //		options.addOption(stopAtFirstProblem);
 		options.addOption(help);
 		
@@ -219,19 +246,55 @@ public class Main {
 			classpath.add(jtestsFolder.getPath().toString() + File.separator);
 			classpath.addAll(librariesPaths);
 			
+			if (cmd.hasOption(rankLimit.getOpt())) {
+				Integer rl = Integer.parseInt(cmd.getOptionValue(rankLimit.getOpt()));
+				if (rl > 0) {
+					Main.rankedStatements = rl;
+				} else {
+					System.err.println("Max ranked statements to consider must be a positive value " + rl);
+					return;
+				}
+			}
+			
+			if (cmd.hasOption(mglLimit.getOpt())) {
+				Integer mgl = Integer.parseInt(cmd.getOptionValue(mglLimit.getOpt()));
+				if (mgl > 0) {
+					Main.mutGenLimitMax = mgl;
+				} else {
+					System.err.println("Max mutGenLimit value must be a positive value " + mgl);
+					return;
+				}
+			}
+			
+			if (cmd.hasOption(gradientVersion.getOpt())) {
+				Integer gstep = Integer.parseInt(cmd.getOptionValue(gradientVersion.getOpt()));
+				if (gstep > 0) {
+					Main.generateGradientVersion = true;
+					Main.gradientStep = gstep;
+				} else {
+					System.err.println("Gradient version step must be a positive value " + gstep);
+					return;
+				}
+			}
+			
 			System.out.println("Fault Localization - version " + version);
 			System.out.println("Running Fault Localization with the following arguments");
 			System.out.println("--------------------------------------------------------");
-			System.out.println("Faulty code source folder  : " + fcodeFolder.getPath().toString());
-			System.out.println("Faulty code classname      : " + faultyClassName);
-			System.out.println("jUnit test binary folder   : " + jtestsFolder.getPath().toString());
-			System.out.println("jUnit tests : ");
+			System.out.println("Faulty code source folder         : " + fcodeFolder.getPath().toString());
+			System.out.println("Faulty code classname             : " + faultyClassName);
+			System.out.println("jUnit test binary folder          : " + jtestsFolder.getPath().toString());
+			System.out.println("jUnit tests                       : ");
 			for (File jt : junitTests) System.out.println("        " + jt.getPath().toString());
 			System.out.println("Spectrum-Based formulas : ");
 			for (Formulas f : sbFormulas) System.out.println("        " + f.getName());
-			System.out.println("Output folder              : " + outputFolder.getPath().toString());
+			System.out.println("Output folder                     : " + outputFolder.getPath().toString());
 			System.out.println("Classpath : ");
 			for (String c : classpath) System.out.println("        " + c);
+			System.out.println("Max ranked statements to consider : " + Main.rankedStatements);
+			System.out.println("Max mutGenLimit value to use      : " + Main.mutGenLimitMax);
+			System.out.println("Generate gradient version         : " + Main.generateGradientVersion);
+			if (Main.generateGradientVersion)
+				System.out.println("Gradient version step             : " + Main.gradientStep);
 			
 			//Calculate rankings and output results
 			
@@ -257,12 +320,29 @@ public class Main {
 				for (Entry<Integer, Float> r : ranking.entrySet()) {
 					if (r.getValue() > 0 && !linesToMark.contains(r.getKey())) {
 						linesToMark.add(r.getKey());
-					}
+					} 
 				}
 			}
 			
-			for (Integer l : linesToMark) {
-				Api.generateMutGenLimitVersion(faultyClassName, fcodeFolder, outputFolder, l);
+			if (!linesToMark.isEmpty()) {
+				List<Integer> orderedLines = new LinkedList<>(linesToMark);
+				
+				orderedLines = orderedLines.subList(0, Math.min(orderedLines.size(), Main.rankedStatements));
+				
+				//Individual versions
+				for (Integer l : orderedLines) {
+					Api.generateMutGenLimitVersion(faultyClassName, fcodeFolder, outputFolder, l, mutGenLimitMax);
+				}
+				
+				//gradient version
+				Map<Integer, Integer> gradient = new TreeMap<>();
+				int currentMGL = mutGenLimitMax;
+				for (Integer l : orderedLines) {
+					gradient.put(l, currentMGL);
+					currentMGL -= gradientStep;
+				}
+				Api.generateMutGenLimitGradientVersion(faultyClassName, fcodeFolder, outputFolder, gradient);
+				
 			}
 			
 			
