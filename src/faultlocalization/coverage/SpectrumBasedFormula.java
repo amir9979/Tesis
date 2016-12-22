@@ -1,7 +1,10 @@
 package faultlocalization.coverage;
 
+import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.stream.Collectors;
 
 //TODO: this class should implement a sprectrum based formula, that given coverage information return a statement ranking
 public class SpectrumBasedFormula {
@@ -122,7 +125,7 @@ public class SpectrumBasedFormula {
 			int totalNeg = coverageInfo.getTotalFailedTests();
 			ranking.put(l, this.formula.evaluate(pos, neg, totalPos, totalNeg));
 		}
-		return ranking;
+		return sortByValue(ranking);
 	}
 	
 	@Override
@@ -133,6 +136,18 @@ public class SpectrumBasedFormula {
 		res += "Description : " + this.formula.description() + "\n";
 		res += "------------------------------\n";
 		return res;
+	}
+	
+	public static <K, V extends Comparable<? super V>> Map<K, V> sortByValue(Map<K, V> map) {
+	    return map.entrySet()
+	              .stream()
+	              .sorted(Map.Entry.comparingByValue(Collections.reverseOrder()))
+	              .collect(Collectors.toMap(
+	                Map.Entry::getKey, 
+	                Map.Entry::getValue, 
+	                (e1, e2) -> e1, 
+	                LinkedHashMap::new
+	              ));
 	}
 
 }
