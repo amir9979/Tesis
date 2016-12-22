@@ -6,7 +6,7 @@ import java.util.List;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
-import introclass.median.introclass_3cf6d33a_007;
+import introclass.median.introclass_3b2376ab_003;
 
 @RunWith(Parameterized.class)
 public class Median_Tests {
@@ -37,7 +37,7 @@ public class Median_Tests {
 
     @Test
     public void test1() {
-    	introclass_3cf6d33a_007 m = new introclass_3cf6d33a_007();
+    	introclass_3b2376ab_003 m = new introclass_3b2376ab_003();
         int result = m.median(x.intValue(), y.intValue(), z.intValue());
         assertTrue((x.intValue() > y.intValue() && y.intValue() > z.intValue() && result == y.intValue()) || (x.intValue() > y.intValue() && y.intValue() <= z.intValue() && x.intValue() > z.intValue() && result == z.intValue()) || (x.intValue() > y.intValue() && y.intValue() <= z.intValue() && x.intValue() <= z.intValue() && result == x.intValue()) || (x.intValue() <= y.intValue() && y.intValue() > z.intValue() && x.intValue() > z.intValue() && result == x.intValue()) || (x.intValue() <= y.intValue() && y.intValue() > z.intValue() && x.intValue() <= z.intValue() && result == z.intValue()) || (x.intValue() <= y.intValue() && y.intValue() <= z.intValue() && result == y.intValue()));
     }
