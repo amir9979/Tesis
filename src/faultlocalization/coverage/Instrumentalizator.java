@@ -3,6 +3,7 @@ package faultlocalization.coverage;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.util.Map;
 import java.util.Scanner;
 
 import com.github.javaparser.ASTHelper;
@@ -13,6 +14,7 @@ import com.github.javaparser.ast.Node;
 import com.github.javaparser.ast.expr.IntegerLiteralExpr;
 import com.github.javaparser.ast.expr.MethodCallExpr;
 import com.github.javaparser.ast.expr.NameExpr;
+import com.github.javaparser.ast.expr.VariableDeclarationExpr;
 import com.github.javaparser.ast.stmt.BlockStmt;
 import com.github.javaparser.ast.stmt.CatchClause;
 import com.github.javaparser.ast.stmt.ExpressionStmt;
@@ -30,38 +32,38 @@ import com.github.javaparser.ast.visitor.ModifierVisitorAdapter;
 public class Instrumentalizator extends ModifierVisitorAdapter<Object> {
 
 	private File fileToInstrument;
-	private int line = -1;
-	private int offset = 0;
+	private Map<Integer, Integer> mutGenLimitPerLine;
 	
 	public Instrumentalizator(File f) {
 		this.fileToInstrument = f;
-		this.line = -1;
+		this.mutGenLimitPerLine = null;
 	}
 	
-	public Instrumentalizator(File f, int line) {
+	public Instrumentalizator(File f, Map<Integer, Integer> mutGenLimitPerLine) {
 		this(f);
-		this.line = line;
+		this.mutGenLimitPerLine = mutGenLimitPerLine;
 	}
 	
 	public void instrument(File output) throws ParseException, IOException {
 		CompilationUnit cu = JavaParser.parse(this.fileToInstrument);
 		
-		if (this.line == -1) {
+		if (this.mutGenLimitPerLine == null) {
 			cu.accept(this, null);
 		}
 		
 		String cuAsString = cu.toString();
 		String result = "";
 		
-		if (this.line != -1) {
+		if (this.mutGenLimitPerLine != null) {
 			Scanner scanner = new Scanner(cuAsString);
 			int i = 1;
 			while (scanner.hasNextLine()) {
 			  String line = scanner.nextLine();
-			  if (this.line == i) {
-				  line += " //mutGenLimit 5\n";
+			  if (this.mutGenLimitPerLine.containsKey(i) && this.mutGenLimitPerLine.get(i) > 0) {
+				  line += " //mutGenLimit " + this.mutGenLimitPerLine.get(i);
 			  }
-			  result += line;
+			  result += line + "\n";
+			  i++;
 			}
 			scanner.close();
 		} else {
@@ -83,7 +85,7 @@ public class Instrumentalizator extends ModifierVisitorAdapter<Object> {
 	    ASTHelper.addArgument(call, new IntegerLiteralExpr(String.valueOf(line)));
 	    return new ExpressionStmt(call);
 	}
-	
+		
 	
 	@Override 
 	public Node visit(BlockStmt node, Object arg){
@@ -99,7 +101,11 @@ public class Instrumentalizator extends ModifierVisitorAdapter<Object> {
 					||
 					node.getParentNode() instanceof SwitchStmt
 					||
-					node.getParentNode() instanceof IfStmt
+					(	
+							node.getParentNode() instanceof IfStmt
+							&&
+							(((IfStmt)node.getParentNode()).getThenStmt() == node)
+					)
 					||
 					node.getParentNode() instanceof ForeachStmt
 					||
@@ -109,7 +115,7 @@ public class Instrumentalizator extends ModifierVisitorAdapter<Object> {
 					||
 					node.getParentNode() instanceof SwitchEntryStmt
 				) {
-				n.addStatement(makeCoverageTrackingCall(node.getBegin().line + offset));
+				n.addStatement(makeCoverageTrackingCall(node.getParentNode().getBegin().line));
 			}
 		}
 		
@@ -135,12 +141,22 @@ public class Instrumentalizator extends ModifierVisitorAdapter<Object> {
 							||
 							st instanceof SwitchEntryStmt
 						)
+					&& (	(
+								st instanceof ExpressionStmt
+								&&	(
+										((ExpressionStmt)st).getExpression() instanceof VariableDeclarationExpr
+										&&
+										((VariableDeclarationExpr) ((ExpressionStmt)st).getExpression()).getData() != null
+									)
+									||
+									!(((ExpressionStmt)st).getExpression() instanceof VariableDeclarationExpr)
+							)
+						)
 			) {
-				n.addStatement(makeCoverageTrackingCall(st.getBegin().line + offset));
+				n.addStatement(makeCoverageTrackingCall(st.getBegin().line));
 			}
+			
 		}
-		
-		if (node.getParentNode() instanceof IfStmt) this.offset++;
 		
 		/*
 		 * Continue visiting the rest of the AST.
