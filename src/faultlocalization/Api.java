@@ -8,6 +8,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeMap;
 import javax.tools.JavaCompiler;
@@ -114,21 +115,21 @@ public class Api {
 		return results;
 	}
 	
-	public static void generateMutGenLimitVersion(	String className,
+	public static File generateMutGenLimitVersion(	String className,
 													File fcodeFolder,
 													File outputFolder,
 													int line) throws IOException, ParseException {
-		generateMutGenLimitVersion(className, fcodeFolder, outputFolder, line, 5);
+		return generateMutGenLimitVersion(className, fcodeFolder, outputFolder, line, 5);
 	}
 	
-	public static void generateMutGenLimitVersion( String className,
+	public static File generateMutGenLimitVersion( String className,
 												   File fcodeFolder,
 												   File outputFolder,
 												   int line,
 												   int mgl) throws IOException, ParseException {
 		String classNameAsPath = className.replaceAll("\\.", File.separator);
 		File classFile = fcodeFolder.toPath().resolve(classNameAsPath + ".java").toFile();
-		File outputMGLFolder = outputFolder.toPath().resolve("MutGenLimitVersions").resolve(className+"-"+line).toFile();
+		File outputMGLFolder = outputFolder.toPath().resolve(className+"-"+line).toFile();
 		File outputFile = outputMGLFolder.toPath().resolve(classNameAsPath+".java").toFile();
 		if (outputFile.exists()) outputFile.delete();
 		outputFile.getParentFile().mkdirs();
@@ -138,19 +139,20 @@ public class Api {
 		mglPerLine.put(line, mgl);
 		Instrumentalizator instrumentalizator = new Instrumentalizator(classFile, mglPerLine);
 		instrumentalizator.instrument(outputFile);
+		return outputFile;
 	}
 	
-	public static void generateMutGenLimitGradientVersion( String className,
+	public static File generateMutGenLimitMultiVersion( String className,
 												   File fcodeFolder,
 												   File outputFolder,
 												   Map<Integer, Integer> mutGenLimitsPerLine) throws IOException, ParseException {
 		String classNameAsPath = className.replaceAll("\\.", File.separator);
-		String fileName = className + "-gradient";
-		for (Integer l : mutGenLimitsPerLine.keySet()) {
-			fileName += "_" + l;
+		String fileName = className;
+		for (Entry<Integer, Integer> l : mutGenLimitsPerLine.entrySet()) {
+			fileName += "_" + l.getKey() + "-" + l.getValue();
 		}
 		File classFile = fcodeFolder.toPath().resolve(classNameAsPath + ".java").toFile();	
-		File outputMGLFolder = outputFolder.toPath().resolve("MutGenLimitVersions").resolve(fileName).toFile();
+		File outputMGLFolder = outputFolder.toPath().resolve(fileName).toFile();
 		File outputFile = outputMGLFolder.toPath().resolve(classNameAsPath+".java").toFile();
 		if (outputFile.exists()) outputFile.delete();
 		outputFile.getParentFile().mkdirs();
@@ -158,6 +160,7 @@ public class Api {
 		
 		Instrumentalizator instrumentalizator = new Instrumentalizator(classFile, mutGenLimitsPerLine);
 		instrumentalizator.instrument(outputFile);
+		return outputFile;
 	}
 	
 	private static String pathsAsString(List<String> paths) {
