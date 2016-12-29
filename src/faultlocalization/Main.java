@@ -39,6 +39,7 @@ public class Main {
 	
 	public static final String version = "0.5";
 	public static int rankedStatements = 3;
+	public static int mutGenLimitMin = 1;
 	public static int mutGenLimitMax = 5;
 	public static boolean generateGradientVersion = false;
 	public static int gradientStep = 2;
@@ -52,7 +53,7 @@ public class Main {
 							"-o", "/home/stein/Desktop/FL/",
 							"-f", "tarantula", "OCHIAI", "OP2", "BARINEL", "DSTAR",
 							"-n", "3",
-							"-m", "5",
+							"-m", "1", "5",
 							"-g", "2"};
 		
 		Options options = new Options();
@@ -96,10 +97,10 @@ public class Main {
 		rankLimit.setType(Integer.class);
 		rankLimit.setArgs(1);
 		
-		Option mglLimit = new Option("m", "mglMax", true, "Max value for mutGenLimit comments");
+		Option mglLimit = new Option("m", "mutGenLimitRange", true, "Max value for mutGenLimit comments");
 		mglLimit.setRequired(false);
 		mglLimit.setType(Integer.class);
-		mglLimit.setArgs(1);
+		mglLimit.setArgs(2);
 		
 		Option gradientVersion = new Option("g", "gradientVersion", true, "Generate gradient mutGenLimit version");
 		gradientVersion.setRequired(false);
@@ -266,6 +267,26 @@ public class Main {
 				}
 			}
 			
+			if (cmd.hasOption(mglLimit.getOpt())) {
+				String[] mglRangeValues = cmd.getOptionValues(mglLimit.getOpt());
+				Integer[] mglRange = new Integer[] {Integer.parseInt(mglRangeValues[0]), Integer.parseInt(mglRangeValues[1])};
+				if (mglRange[0] > mglRange[1]) {
+					System.err.println("Min mutGenLimit is greater than Max mutGenLimit (" + mglRange[0] + "..." + mglRange[1] + "");
+				}
+				if (mglRange[0] > 0) {
+					Main.mutGenLimitMin = mglRange[0];
+				} else {
+					System.err.println("Min mutGenLimit value must be a positive value " + mglRange[0]);
+					return;
+				}
+				if (mglRange[1] > 0) {
+					Main.mutGenLimitMax = mglRange[1];
+				} else {
+					System.err.println("Max mutGenLimit value must be a positive value " + mglRange[1]);
+					return;
+				}
+			}
+			
 			if (cmd.hasOption(gradientVersion.getOpt())) {
 				Integer gstep = Integer.parseInt(cmd.getOptionValue(gradientVersion.getOpt()));
 				if (gstep > 0) {
@@ -291,6 +312,7 @@ public class Main {
 			System.out.println("Classpath : ");
 			for (String c : classpath) System.out.println("        " + c);
 			System.out.println("Max ranked statements to consider : " + Main.rankedStatements);
+			System.out.println("Min mutGenLimit value to use      : " + Main.mutGenLimitMax);
 			System.out.println("Max mutGenLimit value to use      : " + Main.mutGenLimitMax);
 			System.out.println("Generate gradient version         : " + Main.generateGradientVersion);
 			if (Main.generateGradientVersion)
@@ -320,7 +342,7 @@ public class Main {
 				for (Entry<Integer, Float> r : ranking.entrySet()) {
 					if (r.getValue() > 0 && !linesToMark.contains(r.getKey())) {
 						linesToMark.add(r.getKey());
-					} 
+					}
 				}
 			}
 			
@@ -329,19 +351,44 @@ public class Main {
 				
 				orderedLines = orderedLines.subList(0, Math.min(orderedLines.size(), Main.rankedStatements));
 				
-				//Individual versions
-				for (Integer l : orderedLines) {
-					Api.generateMutGenLimitVersion(faultyClassName, fcodeFolder, outputFolder, l, mutGenLimitMax);
+				Map<Integer, List<Map<Integer, Integer>>> mglVersionsPerLine = new TreeMap<>();
+				for (Integer line : orderedLines) {
+					mglVersionsPerLine.put(line, generateMGLPerLine(line, Main.mutGenLimitMin, Main.mutGenLimitMax, null));
 				}
 				
-				//gradient version
-				Map<Integer, Integer> gradient = new TreeMap<>();
-				int currentMGL = mutGenLimitMax;
-				for (Integer l : orderedLines) {
-					gradient.put(l, currentMGL);
-					currentMGL -= gradientStep;
+				List<Map<Integer, Integer>> mutGenLimitVersions = new LinkedList<>();
+				
+				List<Map<Integer, Integer>> lastMGLVersions = new LinkedList<>();
+				for (int l = 0 ; l < orderedLines.size(); l++) {
+					int line = orderedLines.get(l);
+					List<Map<Integer, Integer>> currentLineMGLVersions = mglVersionsPerLine.get(line);
+					if (!lastMGLVersions.isEmpty()) {
+						List<Map<Integer, Integer>> newLastMGLVersions = new LinkedList<>();
+						for (Map<Integer, Integer> lastMGLVersion : lastMGLVersions) {
+							List<Map<Integer, Integer>> newMultiLineVersions = generateMGLPerLine(line, Main.mutGenLimitMin, Main.mutGenLimitMax, lastMGLVersion);
+							newLastMGLVersions.add(newMultiLineVersions.get(newMultiLineVersions.size() - 1));
+							mutGenLimitVersions.addAll(newMultiLineVersions);
+						}
+						lastMGLVersions.addAll(newLastMGLVersions);
+					}
+					mutGenLimitVersions.addAll(currentLineMGLVersions);
+					lastMGLVersions.add(currentLineMGLVersions.get(currentLineMGLVersions.size() - 1));
 				}
-				Api.generateMutGenLimitGradientVersion(faultyClassName, fcodeFolder, outputFolder, gradient);
+				
+				for (Map<Integer, Integer> mglv : mutGenLimitVersions) {
+					System.out.println("===============================");
+					for (Entry<Integer, Integer> lineMGL : mglv.entrySet()) {
+						System.out.println("Line : " + lineMGL.getKey() + "      |     mutGenLimit : " + lineMGL.getValue());
+					}
+				}
+				
+				int idx = 0;
+				for (Map<Integer, Integer> mglv : mutGenLimitVersions) {
+					File out = outputFolder.toPath().resolve("MutGenLimitVersions").resolve(String.valueOf(idx)).toFile();
+					File markedFile = Api.generateMutGenLimitMultiVersion(faultyClassName,fcodeFolder, out, mglv);
+					System.out.println("Marked version saved to : " + markedFile.getPath());
+					idx++;
+				}
 				
 			}
 			
@@ -357,6 +404,19 @@ public class Main {
 			e.printStackTrace();
 		}
 		
+	}
+	
+	private static List<Map<Integer, Integer>> generateMGLPerLine(int line, int min, int max, Map<Integer, Integer> lastMGLVersion) {
+		List<Map<Integer,Integer>> result = new LinkedList<>();
+		for (int v = min; v <= max; v++) {
+			Map<Integer, Integer> lineMgl = new TreeMap<>();
+			lineMgl.put(line, v);
+			if (lastMGLVersion != null) {
+				lineMgl.putAll(lastMGLVersion);
+			}
+			result.add(lineMgl);
+		}
+		return result;
 	}
 	
 
