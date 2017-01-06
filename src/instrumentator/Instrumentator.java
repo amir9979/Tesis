@@ -7,8 +7,10 @@ import java.net.URLClassLoader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
 
 import javax.tools.JavaCompiler;
+import javax.tools.StandardJavaFileManager;
 import javax.tools.ToolProvider;
 
 import org.junit.runner.JUnitCore;
@@ -50,6 +52,9 @@ public class Instrumentator {
 			 * Create the visitors that will traverse the AST and modify the files.
 			 */
 			cu.accept(new CoverageVisitor(filePath), null);
+			/*
+			 * Check if the user gives a particular formula, if not, use the default value.
+			 */
 			if (args.length == 3){
 				int formula = Integer.parseInt(args[2]);
 				tcu.accept(new TestVisitor(testPath, filePath.split("/")[filePath.split("/").length-2],formula), null);
@@ -101,22 +106,36 @@ public class Instrumentator {
 			Files.write(instFilePath, lines);
 			Files.write(instTestPath, testFileLines);
 			/*
-			 * Compile the new
+			 * Compile the new instrumented class.
 			 */
-			JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
 			
-			compiler.run(null, null, null, instFilePath.toString());
-			String classPath = instFilePath.toFile().toURI().toString().replace("./", "");
-			classPath = classPath.replace(filename, "");
-			URLClassLoader classLoader = URLClassLoader.newInstance(new URL[] {new URL(classPath)});
-			System.out.println(classLoader.getURLs()[0].toString());
-			Class<?> cl = classLoader.loadClass(filename);
-			Object cln = cl.newInstance();
-			System.out.println(cln);
+			//Retrieve the system java compiler
+			JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
+			StandardJavaFileManager sjfm = compiler.getStandardFileManager(null, null, null);
+			
+			File jf = new File(instFilePath.toString());
+			
+			Iterable fileObjects = sjfm.getJavaFileObjects(jf);
+			
+			String[] options = new String[]{"-d", "./instrumented/instrumented/"+filePack+"bin"};
+			
+			boolean r = compiler.getTask(null, null, null, Arrays.asList(options), null, fileObjects).call();
+			
+			System.out.println(r);
+			//Attempt to compile the instrumented file.
+//			int result = compiler.run(null, null, null, instFilePath.toString());
+//			System.out.println(result);
+//			String classPath = instFilePath.toFile().toURI().toString().replace("./", "");
+//			classPath = classPath.replace(filename, "");
+//			URLClassLoader classLoader = URLClassLoader.newInstance(new URL[] {new URL(classPath)});
+//			System.out.println(classLoader.getURLs()[0].toString());
+//			Class<?> cl = classLoader.loadClass(filename);
+//			Object cln = cl.newInstance();
+//			System.out.println(cln);
 //			Runtime.getRuntime().exec("javac -cp *:. "+ instFilePath).waitFor();
 //			Runtime.getRuntime().exec("javac -cp *:. "+ instTestPath).waitFor();
 			JUnitCore junit = new JUnitCore();
-		} catch (ParseException | IOException | ClassNotFoundException | InstantiationException | IllegalAccessException  e) {
+		} catch (ParseException | IOException e){//| ClassNotFoundException | InstantiationException | IllegalAccessException  e) {
 			// Catch and report a parsing exception or a file IO exceptions.
 			e.printStackTrace();
 		}
