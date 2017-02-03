@@ -31,6 +31,8 @@ import faultlocalization.junit.runner.TestRunnerException;
 import faultlocalization.loader.Reloader;
 
 public class Api {
+	
+	private static CoverageInformation ci;
 
 	public static Map<String, Map<Integer, Float>> rankStatements (
 															String className,
@@ -104,7 +106,7 @@ public class Api {
 		Map<String, Map<Integer, Float>> results = new TreeMap<>();
 		
 		
-		CoverageInformation ci = CoverageInformationHolder.getInstance().getCoverageInformation(fclassFile.getPath().toString());
+		ci = CoverageInformationHolder.getInstance().getCoverageInformation(fclassFile.getPath().toString());
 		
 		for (Formulas f : formulas) {
 			SpectrumBasedFormula sbf = new SpectrumBasedFormula(f);
@@ -190,6 +192,10 @@ public class Api {
 	            }
 	        }
 	    }
+	}
+
+	public static CoverageInformation getCoverageInformation() {
+		return ci;
 	}
 	
 }
