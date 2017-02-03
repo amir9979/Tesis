@@ -11,6 +11,7 @@ import com.github.javaparser.JavaParser;
 import com.github.javaparser.ParseException;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.Node;
+import com.github.javaparser.ast.expr.Expression;
 import com.github.javaparser.ast.expr.IntegerLiteralExpr;
 import com.github.javaparser.ast.expr.MethodCallExpr;
 import com.github.javaparser.ast.expr.NameExpr;
@@ -85,6 +86,20 @@ public class Instrumentalizator extends ModifierVisitorAdapter<Object> {
 	    ASTHelper.addArgument(call, new IntegerLiteralExpr(String.valueOf(line)));
 	    return new ExpressionStmt(call);
 	}
+	
+	/*
+	 * This method creates and returns the wraper statement object to be added to the Block list of Statements,
+	 * first, it marks the actual line as executable in the hash map containing that information, then, it adds
+	 * a new method call to markExecuted with the file path and the line as arguments, then it returns that Statement.
+	 */
+	private Statement makeReturnCoverageTrackingCall(int line, Expression expression) {
+		//CoverageTracker.markExecutable(file, line); No need for this, I don't want to know if a line could be executed.
+		NameExpr coverageTracker = ASTHelper.createNameExpr("return faultlocalization.coverage.CoverageInformationHolder.getInstance().getCoverageInformation(\""+ this.fileToInstrument.getPath().toString()+"\")");
+		MethodCallExpr call = new MethodCallExpr(coverageTracker, "mark");
+	    ASTHelper.addArgument(call, new IntegerLiteralExpr(String.valueOf(line)));
+	    ASTHelper.addArgument(call, expression);
+	    return new ExpressionStmt(call);
+	}
 		
 	
 	@Override 
@@ -125,7 +140,12 @@ public class Instrumentalizator extends ModifierVisitorAdapter<Object> {
 		 * that will replace it.
 		 */
 		for (Statement st : node.getStmts()){
-			n.addStatement(st);
+			if (st instanceof ReturnStmt){
+				Statement returnSt = makeReturnCoverageTrackingCall(st.getBegin().line, ((ReturnStmt)st).getExpr());
+				n.addStatement(returnSt);
+			}else{
+				n.addStatement(st);
+			}
 			if (	!(st instanceof ReturnStmt)
 					&&
 					!(st instanceof ThrowStmt)

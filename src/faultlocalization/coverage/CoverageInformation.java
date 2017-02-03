@@ -34,6 +34,11 @@ public class CoverageInformation {
 		this.markedLines.add(line);
 	}
 	
+	public <T> T mark(int line, T expression) {
+		mark(line);
+		return expression;
+	} 
+	
 	public void applyMarkedLines(boolean passed) {
 		Map<Integer, Integer> m = passed?this.positiveTestsPerLine:this.negativeTestsPerLine;
 		for (Integer l : visitedLines) {
@@ -60,6 +65,10 @@ public class CoverageInformation {
 			return this.negativeTestsPerLine.get(line);
 		}
 		return 0;
+	}
+	
+	public int getExecutedTimes(int line) {
+		return getFailedCount(line) + getPassedCount(line);
 	}
 	
 	public Set<Integer> getMarkedLines() {

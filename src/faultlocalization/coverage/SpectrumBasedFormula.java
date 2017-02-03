@@ -1,8 +1,10 @@
 package faultlocalization.coverage;
 
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
 
@@ -125,7 +127,7 @@ public class SpectrumBasedFormula {
 			int totalNeg = coverageInfo.getTotalFailedTests();
 			ranking.put(l, this.formula.evaluate(pos, neg, totalPos, totalNeg));
 		}
-		return sortByValue(ranking);
+		return sortByValueAndExecutedTimes(sortByValue(ranking), coverageInfo);
 	}
 	
 	@Override
@@ -148,6 +150,34 @@ public class SpectrumBasedFormula {
 	                (e1, e2) -> e1, 
 	                LinkedHashMap::new
 	              ));
+	}
+	
+	/*
+	 * Reorder ranking by line execution times, only when a neighbor pair of entries have a same ranking value.
+	 */
+	public static <K, V extends Comparable<? super V>> Map<K, V> sortByValueAndExecutedTimes(Map<K, V> map, CoverageInformation ci) {
+		Map<K, V> ranking = new LinkedHashMap<>();
+		Iterator<Entry<K, V>> iterator = map.entrySet().iterator();
+		while ( iterator.hasNext()) {
+			Entry<K, V>  entry = iterator.next();
+			K currentLine = entry.getKey();
+			if (iterator.hasNext()) {
+				Entry<K, V> nextEntry = iterator.next();
+				K nextLine = nextEntry.getKey();
+				int entryTimes = ci.getExecutedTimes((int) currentLine);
+				int nextEntryTimes = ci.getExecutedTimes((int) nextLine);
+				if (entry.getValue().compareTo(nextEntry.getValue()) == 0 && entryTimes < nextEntryTimes) {
+					ranking.put(nextLine, nextEntry.getValue());
+					ranking.put(currentLine, entry.getValue());
+				}else{
+					ranking.put(currentLine, entry.getValue());
+					ranking.put(nextLine, nextEntry.getValue());
+				}	
+			}else{
+				ranking.put(currentLine, entry.getValue());
+			}
+		}
+		return ranking;
 	}
 
 }
