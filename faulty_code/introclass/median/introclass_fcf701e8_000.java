@@ -15,21 +15,21 @@ public class introclass_fcf701e8_000 {
     @
     @*/
     public int median( int a, int b, int c ) {
-    	while (a < b && a < c) { //mutGenLimit 2
+    	while (a < b && a < c) {
             if (b < c) {
                 return b;
             } else {
                 return c;
             }
         }
-        while (b < a && b < c) { //mutGenLimit 2
+        while (b < a && b < c) {
             if (a < c) {
                 return a;
             } else {
                 return c;
             }
         }
-        while (c < a && c < b) { //mutGenLimit 2
+        while (c < a && c < b) {
             if (b < a) {
                 return b;
             } else {

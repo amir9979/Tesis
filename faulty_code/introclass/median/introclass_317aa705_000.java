@@ -17,19 +17,19 @@ public class introclass_317aa705_000 {
     public int median( int a, int b, int c ) {
     	int temp1 = a;
         int temp2 = b;
-    	if (a > b) { //mutGenLimit 1
+    	if (a > b) { 
             a = b;
-            b = temp1; //mutGenLimit 1
+            b = temp1; 
         }
-        if (b > c) { //mutGenLimit 1
+        if (b > c) { 
             b = c;
-            c = temp2; //mutGenLimit 1
+            c = temp2; 
         }
-        if (a > b) { //mutGenLimit 1
+        if (a > b) { 
             a = b;
-            b = temp1; //mutGenLimit 1
+            b = temp1; 
         }
-        return b; //mutGenLimit 1
+        return b; 
     }
 	
 }

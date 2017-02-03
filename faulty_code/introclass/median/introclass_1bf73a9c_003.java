@@ -16,9 +16,9 @@ public class introclass_1bf73a9c_003 {
     @*/
 	public int median(int a, int b, int c) {
 		int result;
-        if ((a > b && a < c) || (a > c && a < b)) { //mutGenLimit 1
+        if ((a > b && a < c) || (a > c && a < b)) {
             result = a;
-        } else if ((b > a && b < c) || (b > c && b < a)) { //mutGenLimit 1
+        } else if ((b > a && b < c) || (b > c && b < a)) {
             result = b;
         } else {
             result = c;

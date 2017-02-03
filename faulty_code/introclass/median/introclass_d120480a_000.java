@@ -16,17 +16,17 @@ public class introclass_d120480a_000 {
     @*/
     public int median( int a, int b, int c ) {
     	int median, temp;
-    	if (a >= b) { //mutGenLimit 1
-            temp = b; //mutGenLimit 1
-            b = a; //mutGenLimit 1
-            a = temp; //mutGenLimit 1
+    	if (a >= b) { 
+            temp = b; 
+            b = a; 
+            a = temp; 
         }
-        if (a < c) { //mutGenLimit 1
-            median = b; //mutGenLimit 1
-        } else if (b > c) { //mutGenLimit 1
-            median = a; //mutGenLimit 1
+        if (a < c) { 
+            median = b; 
+        } else if (b > c) { 
+            median = a; 
         } else {
-            median = c; //mutGenLimit 1
+            median = c; 
         }
         return median;
     }

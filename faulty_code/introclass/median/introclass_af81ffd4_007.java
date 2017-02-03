@@ -16,17 +16,17 @@ public class introclass_af81ffd4_007 {
     @*/
     public int median( int a, int b, int c ) {
     	int median = (a + b + c) / 3;
-        int comp_fir = abs (a - median); //mutGenLimit 1
-        int comp_sec = abs (b - median); //mutGenLimit 1
-        int comp_thi = abs (c - median); //mutGenLimit 1
-        if (comp_fir < comp_sec && comp_fir < comp_thi) { //mutGenLimit 1
+        int comp_fir = abs (a - median); 
+        int comp_sec = abs (b - median); 
+        int comp_thi = abs (c - median); 
+        if (comp_fir < comp_sec && comp_fir < comp_thi) { 
             return a;
-        } else if (comp_sec < comp_fir && comp_sec < comp_thi) { //mutGenLimit 1
+        } else if (comp_sec < comp_fir && comp_sec < comp_thi) { 
             return b;
-        } else if (comp_thi < comp_fir && comp_thi < comp_sec) { //mutGenLimit 1
+        } else if (comp_thi < comp_fir && comp_thi < comp_sec) { 
             return c;
         }
-        return 0; //mutGenLimit 1
+        return 0; 
     }
     
     public int abs(int value) {

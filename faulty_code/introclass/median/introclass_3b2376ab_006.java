@@ -16,20 +16,20 @@ public class introclass_3b2376ab_006 {
     @*/
 	public int median(int a, int b, int c) {
 		int small;
-        if (a <= b) { //mutGenLimit 1
+        if (a <= b) { 
             small = a;
-            if (small > c) { //mutGenLimit 1
+            if (small > c) { 
                 return a;
-            } else if (c > b) { //mutGenLimit 1
+            } else if (c > b) { 
                 return b;
             } else {
                 return c;
             }
         } else {
             small = b;
-            if (small > c) { //mutGenLimit 1
+            if (small > c) { 
                 return b;
-            } else if (c > a) { //mutGenLimit 1
+            } else if (c > a) { 
                 return a;
             } else {
                 return c;

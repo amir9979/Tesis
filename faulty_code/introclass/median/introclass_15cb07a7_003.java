@@ -16,20 +16,20 @@ public class introclass_15cb07a7_003 {
     @*/
     public int median( int a, int b, int c ) {
     	int cmp1, cmp2, med;
-    	if (a <= b) { //mutGenLimit 1
+    	if (a <= b) {
             cmp1 = a;
         } else {
             cmp1 = b;
         }
-        if (b <= c) { //mutGenLimit 1
+        if (b <= c) {
             cmp2 = b;
         } else {
             cmp2 = c;
         }
-        if (cmp1 >= cmp2) { //mutGenLimit 1
-            med = cmp1; //mutGenLimit 1
+        if (cmp1 >= cmp2) {
+            med = cmp1;
         } else {
-            med = cmp2; //mutGenLimit 1
+            med = cmp2;
         }
         return med;
     }

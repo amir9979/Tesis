@@ -15,13 +15,13 @@ public class introclass_48b82975_000 {
     @
     @*/
     public int median( int a, int b, int c ) { //Gives unsat because it's an error with the translation
-    	if ((a <= b && b <= c) || (c <= b && b <= a)) { //mutGenLimit 1
+    	if ((a <= b && b <= c) || (c <= b && b <= a)) { 
             return b;
         }
-        if ((b <= a && a <= c) || (c <= a && a <= b)) { //mutGenLimit 1
+        if ((b <= a && a <= c) || (c <= a && a <= b)) { 
             return a;
         } else {
-            return c; //mutGenLimit 1
+            return c; 
         }
     }
 	

@@ -16,18 +16,18 @@ public class introclass_9c9308d4_012 {
     @*/
     public int median( int a, int b, int c ) {
     	int median;
-    	if (a >= b || a >= c) { //mutGenLimit 1
-            if (b >= c && a >= b) { //mutGenLimit 1
+    	if (a >= b || a >= c) { 
+            if (b >= c && a >= b) { 
                 median = b;
-            } else if (b >= a) { //mutGenLimit 1
+            } else if (b >= a) { 
                 median = a;
             } else {
-                median = c; //mutGenLimit 1
+                median = c; 
             }
-        } else if (b >= c) { //mutGenLimit 1
+        } else if (b >= c) { 
             median = c;
         } else {
-            median = b; //mutGenLimit 1
+            median = b; 
         }
         return median;
     }

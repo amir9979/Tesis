@@ -15,14 +15,14 @@ public class introclass_90834803_010 {
     @
     @*/
     public int median( int a, int b, int c ) {
-    	if ((b >= a && a >= c) || (c <= a && a <= b)) { //mutGenLimit 1
+    	if ((b >= a && a >= c) || (c <= a && a <= b)) { 
             return a;
-        } else if ((a >= b && b >= c) || (a <= b && b <= c)) { //mutGenLimit 1
+        } else if ((a >= b && b >= c) || (a <= b && b <= c)) { 
             return b;
-        } else if ((a >= c && c >= b) || (a <= c && c <= b)) { //mutGenLimit 1
+        } else if ((a >= c && c >= b) || (a <= c && c <= b)) { 
             return c;
         }
-    	return 0; //mutGenLimit 1
+    	return 0; 
     }
 	
 }

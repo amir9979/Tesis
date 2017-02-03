@@ -16,15 +16,15 @@ public class introclass_0cdfa335_003 {
     @*/
     public int median( int a, int b, int c ) {
         int theMedian;
-        if (a >= b && a <= c || a >= c && a <= b) { //mutGenLimit 1
-            theMedian = a; //mutGenLimit 1
+        if (a >= b && a <= c || a >= c && a <= b) {
+            theMedian = a;
         }
-        if (b >= a && b <= c || b >= c && b <= a) { //mutGenLimit 1
-            theMedian = b; //mutGenLimit 1
+        if (b >= a && b <= c || b >= c && b <= a) {
+            theMedian = b;
         } else {
-            theMedian = c; //mutGenLimit 1
+            theMedian = c;
         }
-        return theMedian; //mutGenLimit 1
+        return theMedian;
     }
 	
 }

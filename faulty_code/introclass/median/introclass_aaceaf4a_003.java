@@ -15,25 +15,25 @@ public class introclass_aaceaf4a_003 {
     @
     @*/
     public int median( int a, int b, int c ) {
-    	if ((a > b) && (a < c)) { //mutGenLimit 1
+    	if ((a > b) && (a < c)) { 
             return a;
         }
-        if ((a > c) && (a < b)) { //mutGenLimit 1
+        if ((a > c) && (a < b)) { 
             return a;
         }
-        if ((b > a) && (b < c)) { //mutGenLimit 1
+        if ((b > a) && (b < c)) { 
             return b;
         }
-        if ((b > c) && (b < a)) { //mutGenLimit 1
+        if ((b > c) && (b < a)) { 
             return b;
         }
-        if ((c > b) && (c < a)) { //mutGenLimit 1
+        if ((c > b) && (c < a)) { 
             return c;
         }
-        if ((c > a) && (c < b)) { //mutGenLimit 1
+        if ((c > a) && (c < b)) { 
             return c;
         }
-        return 0; //mutGenLimit 1
+        return 0; 
     }
 	
 }

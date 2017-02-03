@@ -15,16 +15,16 @@ public class introclass_1c2bb3a4_000 {
     @
     @*/
 	public int median(int a, int b, int c) {
-        if (a == b) { //mutGenLimit 1
-        	return a; //mutGenLimit 1
+        if (a == b) {
+        	return a;
         }
-        if (a == c) { //mutGenLimit 1
-            return a; //mutGenLimit 1
+        if (a == c) {
+            return a;
         }
-        if (b == c) { //mutGenLimit 1
-            return b; //mutGenLimit 1
+        if (b == c) {
+            return b;
         }
-        return 0; //mutGenLimit 1
+        return 0;
 	}
 	
 }
