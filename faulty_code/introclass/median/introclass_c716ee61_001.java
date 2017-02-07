@@ -7,10 +7,12 @@ public class introclass_c716ee61_001 {
     
     /*@
     @ requires true;
-    @ ensures ((\result == \old(a)) || (\result == \old(b)) || (\result == \old(c)));
-    @ ensures ((\old(a)!=\old(b) || \old(a)!=\old(c)) ==> ( ((\old(a)==\old(b)) ==> (\result == \old(a))) && ((\old(b)==\old(c)) ==> (\result ==\old(b)))));
-    @ ensures ((\old(a)!=\old(b) && \old(a)!=\old(c) && \old(b)!=\old(c)) ==> (\exists int n; (n == \old(a)) || (n == \old(b)) || (n == \old(c)); \result>n));
-    @ ensures ((\old(a)!=\old(b) && \old(a)!=\old(c) && \old(b)!=\old(c)) ==> (\exists int n; (n == \old(a)) || (n == \old(b)) || (n == \old(c)); \result<n));
+    @ ensures ((\result == a) || (\result == b) || (\result == c));
+    @ ensures ( (a == b) ==> ((\result == a) || (\result == b) ) );
+    @ ensures ( (b == c) ==> ((\result == b) || (\result == c) ) );
+    @ ensures ( (a == c) ==> ((\result == a) || (\result == c) ) );
+    @ ensures ((a!=b && a!=c && b!=c) ==> (\exists int n; (n == a) || (n == b) || (n == c); \result>n));
+    @ ensures ((a!=b && a!=c && b!=c) ==> (\exists int n; (n == a) || (n == b) || (n == c); \result<n));
     @ signals (RuntimeException e) false;
     @
     @*/
