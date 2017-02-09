@@ -17,6 +17,8 @@ import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+
+import faultlocalization.coverage.CoverageInformation;
 import faultlocalization.coverage.SpectrumBasedFormula;
 import faultlocalization.coverage.SpectrumBasedFormula.Formulas;
 
@@ -46,11 +48,87 @@ public class Main {
 
 	public static void main(String[] args) {
 		
-		args = new String[]{"-p", "/home/stein/Projects/FaultLocalization/FaultLocalization/faulty_code/",
-							"-c", "introclass.median.introclass_3b2376ab_003",
-							"-t", "/home/stein/Projects/FaultLocalization/FaultLocalization/tests/",
-							"-j", "median_tests.Median_Tests",
-							"-o", "/home/stein/Desktop/FL/",
+		args = new String[]{"-p", "/Users/gaston/Documents/EclipseWorkspace/FaultLocalization/faulty_code/",
+							/*1*/ //"-c", "introclass.median.introclass_0cdfa335_003",
+							/*2*/ //"-c", "introclass.median.introclass_0cea42f9_003",
+							/*3*/ "-c", "introclass.median.introclass_15cb07a7_003",
+							/*4*/ //"-c", "introclass.median.introclass_1b31fa5c_000",
+							/*5*/ //"-c", "introclass.median.introclass_1bf73a9c_000",
+							/*5*/ //"-c", "introclass.median.introclass_1bf73a9c_000",
+							/*6*/ //"-c", "introclass.median.introclass_1bf73a9c_003",
+							/*7*/ //"-c", "introclass.median.introclass_1c2bb3a4_000",
+							/*8*/ //"-c", "introclass.median.introclass_2c155667_000",
+							/*9*/ //"-c", "introclass.median.introclass_30074a0e_000",
+							/*10*/ //"-c", "introclass.median.introclass_317aa705_000",
+							/*11*/ //"-c", "introclass.median.introclass_317aa705_002",
+							/*12*/ //"-c", "introclass.median.introclass_317aa705_003",
+							/*13*/ //"-c", "introclass.median.introclass_36d8008b_000",
+							/*14*/ //"-c", "introclass.median.introclass_3b2376ab_003",
+							/*15*/ //"-c", "introclass.median.introclass_3b2376ab_006",
+							/*16*/ //"-c", "introclass.median.introclass_3cf6d33a_007",
+							/*17*/ //"-c", "introclass.median.introclass_48b82975_000",
+							/*18*/ //"-c", "introclass.median.introclass_68eb0bb0_000",
+							/*19*/ //"-c", "introclass.median.introclass_6aaeaf2f_000",
+							/*20*/ //"-c", "introclass.median.introclass_6e464f2b_003",
+							/*21*/ //"-c", "introclass.median.introclass_89b1a701_003",
+							/*22*/ //"-c", "introclass.median.introclass_89b1a701_007",
+							/*23*/ //"-c", "introclass.median.introclass_89b1a701_010",
+							
+							/*24*/ //"-c", "introclass.median.introclass_1bf73a9c_000",
+							/*25*/ //"-c", "introclass.median.introclass_1bf73a9c_000",
+							/*26*/ //"-c", "introclass.median.introclass_1bf73a9c_000",
+							/*27*/ //"-c", "introclass.median.introclass_1bf73a9c_000",
+							/*28*/ //"-c", "introclass.median.introclass_1bf73a9c_000",
+							/*29*/ //"-c", "introclass.median.introclass_1bf73a9c_000",
+							/*30*/ //"-c", "introclass.median.introclass_1bf73a9c_000",
+							/*31*/ //"-c", "introclass.median.introclass_1bf73a9c_000",
+							/*32*/ //"-c", "introclass.median.introclass_1bf73a9c_000",
+							/*33*/ //"-c", "introclass.median.introclass_1bf73a9c_000",
+							/*34*/ //"-c", "introclass.median.introclass_1bf73a9c_000",
+
+							
+							/*14*/ //"-c", "introclass.median.introclass_3b2376ab_003",
+							
+							"-t", "/Users/gaston/Documents/EclipseWorkspace/FaultLocalization/tests/",
+							/*1*/ //"-j", "median_tests.introclass_0cdfa335_003_Tests",
+							/*2*/ //"-j", "median_tests.introclass_0cea42f9_003_Tests",
+							/*3*/ "-j", "median_tests.introclass_15cb07a7_003_Tests",
+							/*4*/ //"-j", "median_tests.introclass_1b31fa5c_000_Tests",
+							/*5*/ //"-j", "median_tests.introclass_1bf73a9c_000_Tests",
+							/*6*/ //"-j", "median_tests.introclass_1bf73a9c_003_Tests",
+							/*7*/ //"-j", "median_tests.introclass_1c2bb3a4_000_Tests",
+							/*8*/ //"-j", "median_tests.introclass_2c155667_000_Tests",
+							/*9*/ //"-j", "median_tests.introclass_30074a0e_000_Tests",
+							/*10*/ //"-j", "median_tests.introclass_317aa705_000_Tests",
+							/*11*/ //"-j", "median_tests.introclass_317aa705_002_Tests",
+							/*12*/ //"-j", "median_tests.introclass_317aa705_003_Tests",
+							/*13*/ //"-j", "median_tests.introclass_36d8008b_000_Tests",
+							/*14*/ //"-j", "median_tests.introclass_3b2376ab_003_Tests",
+							/*15*/ //"-j", "median_tests.introclass_3b2376ab_006_Tests",
+							/*16*/ //"-j", "median_tests.introclass_3cf6d33a_007_Tests",
+							/*17*/ //"-j", "median_tests.introclass_48b82975_000_Tests",
+							/*18*/ //"-j", "median_tests.introclass_68eb0bb0_000_Tests",
+							/*19*/ //"-j", "median_tests.introclass_6aaeaf2f_000_Tests",
+							/*20*/ //"-j", "median_tests.introclass_6e464f2b_003_Tests",
+							/*21*/ //"-j", "median_tests.introclass_89b1a701_003_Tests",
+							/*22*/ //"-j", "median_tests.introclass_89b1a701_007_Tests",
+							/*23*/ //"-j", "median_tests.introclass_89b1a701_010_Tests",
+							
+							/*24*/ //"-j", "median_tests.introclass_1bf73a9c_000_Tests",
+							/*25*/ //"-j", "median_tests.introclass_1bf73a9c_000_Tests",
+							/*29*/ //"-j", "median_tests.introclass_1bf73a9c_000_Tests",
+							/*30*/ //"-j", "median_tests.introclass_1bf73a9c_000_Tests",
+							/*31*/ //"-j", "median_tests.introclass_1bf73a9c_000_Tests",
+							/*32*/ //"-j", "median_tests.introclass_1bf73a9c_000_Tests",
+							/*33*/ //"-j", "median_tests.introclass_1bf73a9c_000_Tests",
+							
+							
+							
+							
+							//14"-j", "median_tests.introclass_3b2376ab_003_Tests",
+							
+							
+							"-o", "/Users/gaston/Desktop/FL/",
 							"-f", "tarantula", "OCHIAI", "OP2", "BARINEL", "DSTAR",
 							"-n", "3",
 							"-m", "1", "5",
@@ -321,6 +399,7 @@ public class Main {
 			//Calculate rankings and output results
 			
 			Map<String, Map<Integer, Float>> rankings = Api.rankStatements(faultyClassName, fcodeFolder, jtestsFolder, outputFolder, jutests, sbFormulas, librariesPaths);
+			CoverageInformation ci = Api.getCoverageInformation();
 			
 			for (Formulas f : sbFormulas) {
 				Map<Integer, Float> ranking = rankings.get(f.getName());
@@ -328,7 +407,7 @@ public class Main {
 				System.out.println(f.getName());
 				System.out.println("Statements ranking :");
 				for (Entry<Integer, Float> rank : ranking.entrySet()) {
-					System.out.println("s : " + rank.getKey() + " r : " + rank.getValue());
+					System.out.println("s : " + rank.getKey() + " r : " + rank.getValue() + " executed times : " + Api.getCoverageInformation().getExecutedTimes(rank.getKey()) );
 				}
 				System.out.println("================================");
 				System.out.println();
@@ -346,7 +425,10 @@ public class Main {
 				}
 			}
 			
+			System.out.println("lines to mark: "+linesToMark.size());
+			
 			if (!linesToMark.isEmpty()) {
+				System.out.println("lines to mark is empty!!!!");
 				List<Integer> orderedLines = new LinkedList<>(linesToMark);
 				
 				orderedLines = orderedLines.subList(0, Math.min(orderedLines.size(), Main.rankedStatements));
