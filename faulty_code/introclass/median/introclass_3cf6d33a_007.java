@@ -2,7 +2,9 @@ package introclass.median;
 
 public class introclass_3cf6d33a_007 {
 
-    
+	public introclass_3cf6d33a_007() {
+    }
+	
 	/*@
     @ requires true;
     @ ensures ((\result == a) || (\result == b) || (\result == c));

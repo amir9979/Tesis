@@ -1,8 +1,11 @@
 package introclass.median;
 
+
 public class introclass_30074a0e_000 {
 
-    
+	public introclass_30074a0e_000() {
+    }
+	
 	/*@
     @ requires true;
     @ ensures ((\result == a) || (\result == b) || (\result == c));

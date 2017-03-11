@@ -127,6 +127,7 @@ public class SpectrumBasedFormula {
 			int totalNeg = coverageInfo.getTotalFailedTests();
 			ranking.put(l, this.formula.evaluate(pos, neg, totalPos, totalNeg));
 		}
+		//return sortByValue(ranking);
 		return sortByValueAndExecutedTimes(sortByValue(ranking), coverageInfo);
 	}
 	
