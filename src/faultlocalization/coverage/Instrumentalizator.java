@@ -184,6 +184,8 @@ public class Instrumentalizator extends ModifierVisitorAdapter<Object> {
 							!(((ExpressionStmt)st).getExpression() instanceof VariableDeclarationExpr)) {
 				n.addStatement(st);
 				n.addStatement(makeCoverageTrackingCall(st.getBegin().line));
+			} else {
+				n.addStatement(st);
 			}
 		}
 		
