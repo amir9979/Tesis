@@ -17,7 +17,6 @@ import com.github.javaparser.ast.expr.MethodCallExpr;
 import com.github.javaparser.ast.expr.NameExpr;
 import com.github.javaparser.ast.expr.VariableDeclarationExpr;
 import com.github.javaparser.ast.stmt.BlockStmt;
-import com.github.javaparser.ast.stmt.CatchClause;
 import com.github.javaparser.ast.stmt.ExpressionStmt;
 import com.github.javaparser.ast.stmt.ForStmt;
 import com.github.javaparser.ast.stmt.ForeachStmt;
@@ -92,13 +91,21 @@ public class Instrumentalizator extends ModifierVisitorAdapter<Object> {
 	 * first, it marks the actual line as executable in the hash map containing that information, then, it adds
 	 * a new method call to markExecuted with the file path and the line as arguments, then it returns that Statement.
 	 */
-	private Statement makeReturnCoverageTrackingCall(int line, Expression expression) {
-		//CoverageTracker.markExecutable(file, line); No need for this, I don't want to know if a line could be executed.
-		NameExpr coverageTracker = ASTHelper.createNameExpr("return faultlocalization.coverage.CoverageInformationHolder.getInstance().getCoverageInformation(\""+ this.fileToInstrument.getPath().toString()+"\")");
+//	private Statement makeReturnCoverageTrackingCall(int line, Expression expression) {
+//		//CoverageTracker.markExecutable(file, line); No need for this, I don't want to know if a line could be executed.
+//		NameExpr coverageTracker = ASTHelper.createNameExpr("return faultlocalization.coverage.CoverageInformationHolder.getInstance().getCoverageInformation(\""+ this.fileToInstrument.getPath().toString()+"\")");
+//		MethodCallExpr call = new MethodCallExpr(coverageTracker, "mark");
+//	    ASTHelper.addArgument(call, new IntegerLiteralExpr(String.valueOf(line)));
+//	    ASTHelper.addArgument(call, expression);
+//	    return new ExpressionStmt(call);
+//	}
+	
+	private MethodCallExpr markExpression(int line, Expression expression) {
+		NameExpr coverageTracker = ASTHelper.createNameExpr("faultlocalization.coverage.CoverageInformationHolder.getInstance().getCoverageInformation(\""+ this.fileToInstrument.getPath().toString()+"\")");
 		MethodCallExpr call = new MethodCallExpr(coverageTracker, "mark");
 	    ASTHelper.addArgument(call, new IntegerLiteralExpr(String.valueOf(line)));
 	    ASTHelper.addArgument(call, expression);
-	    return new ExpressionStmt(call);
+	    return call;
 	}
 		
 	
@@ -111,29 +118,6 @@ public class Instrumentalizator extends ModifierVisitorAdapter<Object> {
 		 */
 		BlockStmt n = new BlockStmt();
 		
-		if (node.getParentNode() instanceof Statement) {
-			if (	node.getParentNode() instanceof WhileStmt
-					||
-					node.getParentNode() instanceof SwitchStmt
-					||
-					(	
-							node.getParentNode() instanceof IfStmt
-							&&
-							(((IfStmt)node.getParentNode()).getThenStmt() == node)
-					)
-					||
-					node.getParentNode() instanceof ForeachStmt
-					||
-					node.getParentNode() instanceof ForStmt
-					||
-					node.getParentNode() instanceof CatchClause
-					||
-					node.getParentNode() instanceof SwitchEntryStmt
-				) {
-				n.addStatement(makeCoverageTrackingCall(node.getParentNode().getBegin().line));
-			}
-		}
-		
 		/*
 		 * Add the new statement to the created Block in the first line of the visited block.
 		 * Then, add all the statements that belong to the actual node to the block statement
@@ -141,41 +125,66 @@ public class Instrumentalizator extends ModifierVisitorAdapter<Object> {
 		 */
 		for (Statement st : node.getStmts()){
 			if (st instanceof ReturnStmt){
-				Statement returnSt = makeReturnCoverageTrackingCall(st.getBegin().line, ((ReturnStmt)st).getExpr());
-				n.addStatement(returnSt);
-			}else{
+				((ReturnStmt)st).setExpr(markExpression(st.getBegin().line, ((ReturnStmt)st).getExpr()));
 				n.addStatement(st);
-			}
-			if (	!(st instanceof ReturnStmt)
-					&&
-					!(st instanceof ThrowStmt)
-					&& !(	st instanceof WhileStmt
-							||
-							st instanceof SwitchStmt
-							||
-							st instanceof IfStmt
-							||
-							st instanceof ForeachStmt
-							||
-							st instanceof ForStmt
-							||
-							st instanceof SwitchEntryStmt
-						)
-					&& (	(
-								st instanceof ExpressionStmt
-								&&	(
-										((ExpressionStmt)st).getExpression() instanceof VariableDeclarationExpr
-										&&
-										((VariableDeclarationExpr) ((ExpressionStmt)st).getExpression()).getData() != null
-									)
-									||
-									!(((ExpressionStmt)st).getExpression() instanceof VariableDeclarationExpr)
+			} else if (st instanceof IfStmt) {
+				((IfStmt)st).setCondition(markExpression(st.getBegin().line, ((IfStmt)st).getCondition()));
+				Statement thenP = ((IfStmt)st).getThenStmt();
+				if (thenP != null && !(thenP instanceof BlockStmt)) {
+					BlockStmt thenBlock = new BlockStmt();
+					thenBlock.addStatement(thenP);
+					((IfStmt)st).setThenStmt(thenBlock);
+				}
+				Statement elseP = ((IfStmt)st).getElseStmt();
+				if (elseP != null && !(elseP instanceof BlockStmt)) {
+					BlockStmt elseBlock = new BlockStmt();
+					elseBlock.addStatement(elseP);
+					((IfStmt)st).setElseStmt(elseBlock);
+				}
+				n.addStatement(st);
+			} else if (st instanceof ThrowStmt) {
+				((ThrowStmt)st).setExpr(markExpression(st.getBegin().line, ((ThrowStmt)st).getExpr()));
+				n.addStatement(st);
+			} else if (st instanceof WhileStmt) {
+				((WhileStmt)st).setCondition(markExpression(st.getBegin().line, ((WhileStmt)st).getCondition()));
+				Statement blockP = ((WhileStmt)st).getBody();
+				if (blockP != null && !(blockP instanceof BlockStmt)) {
+					BlockStmt block = new BlockStmt();
+					block.addStatement(blockP);
+					((WhileStmt)st).setBody(block);
+				}
+				n.addStatement(st);
+			} else if (st instanceof SwitchStmt) {
+				((SwitchStmt)st).setSelector(markExpression(st.getBegin().line, ((SwitchStmt)st).getSelector()));
+				n.addStatement(st);
+			} else if (st instanceof ForeachStmt) {
+				((ForeachStmt)st).setIterable(markExpression(st.getBegin().line, ((ForeachStmt)st).getIterable()));
+				Statement blockP = ((ForeachStmt)st).getBody();
+				if (blockP != null && !(blockP instanceof BlockStmt)) {
+					BlockStmt block = new BlockStmt();
+					block.addStatement(blockP);
+					((ForeachStmt)st).setBody(block);
+				}
+				n.addStatement(st);
+			} else if (st instanceof ForStmt) {
+				System.err.println("for (init, cond, inc) statements are not yet supported");
+				n.addStatement(st);
+			} else if (st instanceof SwitchEntryStmt) {
+				((SwitchEntryStmt)st).setLabel(markExpression(st.getBegin().line, ((SwitchEntryStmt)st).getLabel()));
+				n.addStatement(st);
+			} else if (	st instanceof ExpressionStmt
+						&&	(
+							((ExpressionStmt)st).getExpression() instanceof VariableDeclarationExpr
+							&&
+							((VariableDeclarationExpr) ((ExpressionStmt)st).getExpression()).getVars() != null
+							&&
+							((VariableDeclarationExpr) ((ExpressionStmt)st).getExpression()).getVars().stream().anyMatch(vd -> vd.getInit() != null)
 							)
-						)
-			) {
+							||
+							!(((ExpressionStmt)st).getExpression() instanceof VariableDeclarationExpr)) {
+				n.addStatement(st);
 				n.addStatement(makeCoverageTrackingCall(st.getBegin().line));
 			}
-			
 		}
 		
 		/*
