@@ -1,0 +1,5 @@
+faultyClassLocation=./faulty_code/median_examples/
+testsLocation=./tests/median_tests/
+formula=ALL
+testsOutputLocation=./instrumented/tests/
+classesOutputLocation=./instrumented/classes/
