@@ -24,20 +24,25 @@ public class TestVisitor extends ModifierVisitorAdapter<Object>{
 
 	private String testFile;
 	private String packageFile;
-	private int formula;
+	private String formula;
 	
-	public TestVisitor(String testFile, String packageOfFileToTest){
+	public TestVisitor(String testFile, String formula){
 		this.setTestFile(testFile);
-		this.packageFile = packageOfFileToTest;
+		this.formula = formula;
 	}
 	
-	public TestVisitor(String testFile, String packageOfFileToTest, int formula){
+//	public TestVisitor(String testFile, String packageOfFileToTest){
+//		this.setTestFile(testFile);
+//		this.packageFile = packageOfFileToTest;
+//	}
+//	
+	public TestVisitor(String testFile, String packageOfFileToTest, String formula){
 		this.setTestFile(testFile);
 		this.packageFile = packageOfFileToTest;
 		this.formula = formula;
 	}
 
-	public TestVisitor(int formula){
+	public TestVisitor(String formula){
 		this.formula = formula;
 	}
 	public String getTestFile() {
@@ -55,18 +60,17 @@ public class TestVisitor extends ModifierVisitorAdapter<Object>{
 		return pd;
 	}
 	
-	@Override
-	public Node visit(ImportDeclaration id, Object arg){
-		if (id.getName().toString().contains(packageFile)){
-			id.setName(new NameExpr("instrumented."+id.getName()));
-		}
-		super.visit(id, arg);
-		return id;
-	}
+//	@Override
+//	public Node visit(ImportDeclaration id, Object arg){
+//		if (id.getName().toString().contains(packageFile)){
+//			id.setName(new NameExpr("instrumented."+id.getName()));
+//		}
+//		super.visit(id, arg);
+//		return id;
+//	}
 	
 	@Override
 	public Node visit(ClassOrInterfaceDeclaration cd, Object arg){
-		//System.out.println("Entre a la clase de nombre "+cd.getName() );
 		addRuleDeclaration(cd);
 		cd.tryAddImportToParentCompilationUnit(org.junit.Rule.class);
 		addBeforeMethod(cd);

@@ -24,7 +24,7 @@ public class CoverageTracker {
 		ALL
 	}
 	
-	private static int formula;
+	private static String formula;
 	private static int exp = 2;
 	
 	//Maps lines numbers to amount of executions on passing and failing tests
@@ -80,26 +80,26 @@ public class CoverageTracker {
 		}
 	}
 	
-	private static String generateRankingReport(int formula){
+	private static String generateRankingReport(String formula){
 		StringBuilder sb = new StringBuilder();
 		sb.append("RANKING START\n");
 		switch (formula){
-			case 1:
+			case "TARANTULA":
 				sb.append("USING FORMULA: "+Formulas.TARANTULA+"\n");
 				break;
-			case 2:
+			case "OCHIAI":
 				sb.append("USING FORMULA: "+Formulas.OCHIAI+"\n");
 				break;
-			case 3:
+			case "OP2":
 				sb.append("USING FORMULA: "+Formulas.OP2+"\n");
 				break;
-			case 4:
+			case "BARINEL":
 				sb.append("USING FORMULA: "+Formulas.BARINEL+"\n");
 				break;
-			case 5:
+			case "DSTAR":
 				sb.append("USING FORMULA: "+Formulas.DSTAR+"\n");
 				break;
-			default: 
+			case "ALL": 
 				sb.append("USING "+Formulas.ALL+" FORMULAS \n");
 				break;
 		}
@@ -109,29 +109,29 @@ public class CoverageTracker {
 		return sb.toString();
 	}
 	
-	private static String generateRanking(int formula){
+	private static String generateRanking(String formula){
 		StringBuilder sb = new StringBuilder();
 		for (Integer line : stats.keySet()){
 			int lineFails = stats.get(line).getRight();
 			int lineSuccess = stats.get(line).getLeft();
 			sb.append("|-LINE: "+line.toString()+"\n|---RANK:");
 			switch(formula){
-				case 1:
+				case "TARANTULA":
 					sb.append("\t"+tarantulaRank(lineFails, lineSuccess, failed, passed)+"\n");
 					break;
-				case 2:
+				case "OCHIAI":
 					sb.append("\t"+ochiaiRank(lineFails, lineSuccess, failed)+"\n");
 					break;
-				case 3:
+				case "OP2":
 					sb.append("\t"+op2Rank(lineFails, lineSuccess, passed)+"\n");
 					break;
-				case 4:
+				case "BARINEL":
 					sb.append("\t"+barinelRank(lineFails, lineSuccess)+"\n");
 					break;
-				case 5:
+				case "DSTAR":
 					sb.append("\t"+dStarRank(lineFails, lineSuccess, failed, exp)+"\n");
 					break;
-				default:
+				case "ALL":
 					sb.append("\n"+combinedRanks(lineFails, lineSuccess, failed, passed, exp));
 					break;
 			}
@@ -322,11 +322,11 @@ public class CoverageTracker {
 			}
 		});
 	}
-	public static int getFormula() {
+	public static String getFormula() {
 		return formula;
 	}
 
-	public static void setFormula(int formula) {
+	public static void setFormula(String formula) {
 		CoverageTracker.formula = formula;
 	}
 }
