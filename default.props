@@ -1,5 +1,10 @@
-faultyClassLocation=./faulty_code/median_examples/
-testsLocation=./tests/median_tests/
-formula=ALL
-testsOutputLocation=./instrumented/tests/
-classesOutputLocation=./instrumented/classes/
+faultyClassLocation=/home/joako/workspace/FaultLocalization/faulty_code/
+faultyClass=introclass.median.mid
+testsFolder=/home/joako/workspace/FaultLocalization/tests/
+tests=median_tests.mid_Tests
+output=./instrumented
+techniques= TARANTULA, OCHIAI, OP2, BARINEL, DSTAR, OTHER
+libs=
+rankLimit=3
+mglLimit =1, 5
+gradientVersion=2

@@ -1,0 +1,13 @@
+faultyClassLocation=/home/joako/workspace/FaultLocalization/faulty_code/
+faultyClass=introclass.median.introclass_0cdfa335_003	
+testsFolder=/home/joako/workspace/FaultLocalization/tests/
+tests=median_tests.introclass_0cdfa335_003_Tests
+output=/home/joako/Escritorio/PruebaFL/
+techniques= "tarantula", "OCHIAI", "OP2", "BARINEL", "DSTAR"
+libs=
+rankLimit=3
+mglLimit=1,5
+gradientVersion=2
+#testsOutputLocation=./SIR_instrumented/tests/
+#multipleFaultyClasses=FALSE
+#multipleTests=FALSE

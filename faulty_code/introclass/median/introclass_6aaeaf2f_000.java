@@ -7,23 +7,25 @@ public class introclass_6aaeaf2f_000 {
     
     /*@
     @ requires true;
-    @ ensures ((\result == \old(a)) || (\result == \old(b)) || (\result == \old(c)));
-    @ ensures ((\old(a)!=\old(b) || \old(a)!=\old(c)) ==> ( ((\old(a)==\old(b)) ==> (\result == \old(a))) && ((\old(b)==\old(c)) ==> (\result ==\old(b)))));
-    @ ensures ((\old(a)!=\old(b) && \old(a)!=\old(c) && \old(b)!=\old(c)) ==> (\exists int n; (n == \old(a)) || (n == \old(b)) || (n == \old(c)); \result>n));
-    @ ensures ((\old(a)!=\old(b) && \old(a)!=\old(c) && \old(b)!=\old(c)) ==> (\exists int n; (n == \old(a)) || (n == \old(b)) || (n == \old(c)); \result<n));
+    @ ensures ((\result == a) || (\result == b) || (\result == c));
+    @ ensures ( (a == b) ==> ((\result == a) || (\result == b) ) );
+    @ ensures ( (b == c) ==> ((\result == b) || (\result == c) ) );
+    @ ensures ( (a == c) ==> ((\result == a) || (\result == c) ) );
+    @ ensures ((a!=b && a!=c && b!=c) ==> (\exists int n; (n == a) || (n == b) || (n == c); \result>n));
+    @ ensures ((a!=b && a!=c && b!=c) ==> (\exists int n; (n == a) || (n == b) || (n == c); \result<n));
     @ signals (RuntimeException e) false;
     @
     @*/
     public int median( int a, int b, int c ) {
     	int median;
-    	if (((a > b) && (a < c)) || ((a < b) && (a > c))) { //mutGenLimit 1
+    	if (((a > b) && (a < c)) || ((a < b) && (a > c))) { 
             median = a;
-        } else if (((b > a) && (c > b)) || ((b < a) && (b > c))) { //mutGenLimit 1
+        } else if (((b > a) && (c > b)) || ((b < a) && (b > c))) { 
             median = b;
         } else {
-            median = c; //mutGenLimit 1
+            median = c; 
         }
-        return median; //mutGenLimit 1
+        return median; 
     }
 	
 }
