@@ -2,6 +2,7 @@ package faultlocalization;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
@@ -112,7 +113,11 @@ public class Api {
 			SpectrumBasedFormula sbf = new SpectrumBasedFormula(f);
 			results.put(f.getName(), sbf.rankStatements(ci));
 		}
-		
+		File rankingOutputFile = outputFolder.toPath().resolve(fclassNameAsPath+"-ranking.txt").toFile();
+		if (rankingOutputFile.exists()) rankingOutputFile.delete();
+		rankingOutputFile.getParentFile().mkdirs();
+		rankingOutputFile.createNewFile();
+		writeRankingToFile(results, rankingOutputFile);
 		
 		return results;
 	}
@@ -122,6 +127,21 @@ public class Api {
 													File outputFolder,
 													int line) throws IOException, ParseException {
 		return generateMutGenLimitVersion(className, fcodeFolder, outputFolder, line, 5);
+	}
+	
+	private static void writeRankingToFile(Map<String, Map<Integer,Float>> ranking, File outputFolder) throws IOException{
+		StringBuilder sb = new StringBuilder();
+		sb.append("RANKING START \n____________________________ \n");
+		for (String formula : ranking.keySet()){
+			sb.append("FORMULA: "+formula +"\n");
+			sb.append("========================\n");
+			Map<Integer, Float> rank = ranking.get(formula);
+			for (Entry<Integer, Float>  r : rank.entrySet()){
+				sb.append("LINE: "+r.getKey()+" --- RANK: "+ r.getValue()+"  EXECUTED: "+ getCoverageInformation().getExecutedTimes(r.getKey())+" TIMES\n");
+			}
+			sb.append("========================\n");
+		}
+		Files.write(outputFolder.toPath(), sb.toString().getBytes());
 	}
 	
 	public static File generateMutGenLimitVersion( String className,

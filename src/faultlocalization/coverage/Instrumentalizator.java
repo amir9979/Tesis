@@ -45,6 +45,7 @@ public class Instrumentalizator extends ModifierVisitorAdapter<Object> {
 	}
 	
 	public void instrument(File output) throws ParseException, IOException {
+		
 		CompilationUnit cu = JavaParser.parse(this.fileToInstrument);
 		
 		if (this.mutGenLimitPerLine == null) {

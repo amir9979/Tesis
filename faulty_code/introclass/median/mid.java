@@ -19,17 +19,38 @@ public class mid {
     public int median( int x, int y, int z ) {
         int m = z;
         // read ("Enter 3 numbers:",x,y,z);
-        if ( y < z ) {
+        /*if ( y < z ) {
             if ( x < y ){
             	m = y;
             }else if ( x < z )
-            			m = y;
+            	m = z;
         }else{
         	if ( x > y )
         		m = y;
         	else if ( x > z )
         		m = x;
-        }
+        }*/
+		if (x > y) {
+			if (y > z){
+				m = y;			
+			} else if (y <= z){
+				if (x > z){
+					m = z;				
+				} else if (x <= z){
+					m = x;
+				}
+			} 
+		} else if (x <= y) {
+			if (y > z){
+				if (x > z){
+					m = x;				
+				} else if (x <= z){
+					m = z;
+				}
+			} else if (y <= z) {
+				m = y;
+			}
+		}
         return m;
     }
 	
